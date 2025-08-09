@@ -1,0 +1,203 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200;
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-white text-gray-700 border-gray-300 hover:bg-gray-50 focus:ring-primary-500;
+  }
+  
+  .btn-success {
+    @apply btn bg-success-600 text-white hover:bg-success-700 focus:ring-success-500;
+  }
+  
+  .btn-error {
+    @apply btn bg-error-600 text-white hover:bg-error-700 focus:ring-error-500;
+  }
+  
+  .input {
+    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-soft border border-gray-200;
+  }
+  
+  .card-header {
+    @apply px-6 py-4 border-b border-gray-200;
+  }
+  
+  .card-body {
+    @apply px-6 py-4;
+  }
+  
+  .emoji-scale {
+    @apply flex items-center justify-center space-x-2;
+  }
+  
+  .emoji-option {
+    @apply flex flex-col items-center p-3 rounded-lg border-2 border-gray-200 hover:border-primary-300 hover:bg-primary-50 cursor-pointer transition-all duration-200;
+  }
+  
+  .emoji-option.selected {
+    @apply border-primary-500 bg-primary-50 scale-105;
+  }
+  
+  .emoji-option img {
+    @apply w-12 h-12 object-contain mb-2;
+  }
+  
+  .emoji-option span {
+    @apply text-xs text-gray-600 text-center;
+  }
+  
+  .survey-builder {
+    @apply min-h-screen bg-gray-50;
+  }
+  
+  .survey-preview {
+    @apply max-w-2xl mx-auto bg-white rounded-lg shadow-medium p-8;
+  }
+  
+  .question-card {
+    @apply card mb-6;
+  }
+  
+  .question-header {
+    @apply flex items-center justify-between;
+  }
+  
+  .question-type-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .question-type-emoji {
+    @apply question-type-badge bg-yellow-100 text-yellow-800;
+  }
+  
+  .question-type-multiple {
+    @apply question-type-badge bg-blue-100 text-blue-800;
+  }
+  
+  .question-type-text {
+    @apply question-type-badge bg-green-100 text-green-800;
+  }
+  
+  .question-type-likert {
+    @apply question-type-badge bg-purple-100 text-purple-800;
+  }
+  
+  .analytics-card {
+    @apply card p-6;
+  }
+  
+  .analytics-stat {
+    @apply text-center;
+  }
+  
+  .analytics-stat-value {
+    @apply text-3xl font-bold text-gray-900;
+  }
+  
+  .analytics-stat-label {
+    @apply text-sm text-gray-500 mt-1;
+  }
+  
+  .chart-container {
+    @apply w-full h-64;
+  }
+  
+  .drag-handle {
+    @apply cursor-move text-gray-400 hover:text-gray-600;
+  }
+  
+  .drop-zone {
+    @apply border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary-300 hover:bg-primary-50 transition-colors duration-200;
+  }
+  
+  .drop-zone.active {
+    @apply border-primary-500 bg-primary-50;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .animate-bounce-in {
+    animation: bounceIn 0.6s ease-out;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* Loading spinner */
+.spinner {
+  @apply animate-spin rounded-full border-2 border-gray-300 border-t-primary-600;
+}
+
+/* Emoji scale animations */
+.emoji-scale-enter {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.emoji-scale-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.emoji-scale-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.emoji-scale-exit-active {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 300ms, transform 300ms;
+} 

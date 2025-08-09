@@ -1,0 +1,6 @@
+Question,Type,Required,Description,Options
+"What is your name?",text,false,"Please enter your full name",""
+"How satisfied are you with our service?,multiple_choice,true,"Rate your satisfaction level","Very Satisfied|Satisfied|Neutral|Dissatisfied|Very Dissatisfied"
+"Rate your overall experience,emoji_scale,true,"Rate your experience from 1-5",""
+"What improvements would you suggest?,text,false,"Any suggestions for improvement",""
+"How likely are you to recommend us?,multiple_choice,true,"Rate your likelihood to recommend","Very Likely|Likely|Neutral|Unlikely|Very Unlikely" 

@@ -1,0 +1,41 @@
+[
+  {
+    "title": "What is your name?",
+    "type": "text",
+    "required": false,
+    "description": "Please enter your full name"
+  },
+  {
+    "title": "How satisfied are you with our service?",
+    "type": "multiple_choice",
+    "required": true,
+    "description": "Rate your satisfaction level",
+    "options": ["Very Satisfied", "Satisfied", "Neutral", "Dissatisfied", "Very Dissatisfied"]
+  },
+  {
+    "title": "Rate your overall experience",
+    "type": "emoji_scale",
+    "required": true,
+    "description": "Rate your experience from 1-5",
+    "options": [
+      {"emoji": "😠", "label": "Very Unsatisfied", "value": 1},
+      {"emoji": "😞", "label": "Unsatisfied", "value": 2},
+      {"emoji": "😐", "label": "Neutral", "value": 3},
+      {"emoji": "🙂", "label": "Satisfied", "value": 4},
+      {"emoji": "🥰", "label": "Very Satisfied", "value": 5}
+    ]
+  },
+  {
+    "title": "What improvements would you suggest?",
+    "type": "text",
+    "required": false,
+    "description": "Any suggestions for improvement"
+  },
+  {
+    "title": "How likely are you to recommend us?",
+    "type": "multiple_choice",
+    "required": true,
+    "description": "Rate your likelihood to recommend",
+    "options": ["Very Likely", "Likely", "Neutral", "Unlikely", "Very Unlikely"]
+  }
+] 
