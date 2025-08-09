@@ -21,6 +21,8 @@ out/
 .cache/
 .parcel-cache/
 .eslintcache
+**/node_modules/.cache/
+**/.cache/
 
 # Logs
 logs
