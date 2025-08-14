@@ -138,7 +138,8 @@ const SurveyBuilder = () => {
     { type: 'multiple_choice', label: 'Multiple Choice', icon: List, color: 'text-blue-600' },
     { type: 'text', label: 'Text Input', icon: Type, color: 'text-green-600' },
     { type: 'likert_scale', label: 'Likert Scale', icon: BarChart3, color: 'text-purple-600' },
-    { type: 'image_upload', label: 'Image Upload', icon: Image, color: 'text-orange-600' }
+    { type: 'image_upload', label: 'Image Upload', icon: Image, color: 'text-orange-600' },
+    { type: 'contact_followup', label: 'Comments & Phone Number', icon: Upload, color: 'text-indigo-600' }
   ];
 
   const renderQuestionEditor = (question) => {
@@ -151,6 +152,8 @@ const SurveyBuilder = () => {
         return <TextEditor question={question} updateQuestion={updateQuestion} />;
       case 'likert_scale':
         return <LikertScaleEditor question={question} updateQuestion={updateQuestion} />;
+      case 'contact_followup':
+        return <ContactFollowupEditor question={question} updateQuestion={updateQuestion} />;
       default:
         return <div>Question type not supported</div>;
     }
@@ -184,6 +187,30 @@ const SurveyBuilder = () => {
           <div className="p-4 border rounded-lg">
             <h4 className="font-medium mb-2">{question.title}</h4>
             <textarea className="w-full p-2 border rounded" rows="3" placeholder="Your answer..." />
+          </div>
+        );
+      case 'contact_followup':
+        return (
+          <div className="p-4 border rounded-lg">
+            <h4 className="font-medium mb-2">{question.title}</h4>
+            <div className="space-y-3">
+              <textarea 
+                className="w-full p-2 border rounded" 
+                rows="3" 
+                placeholder={question.commentsPlaceholder || "We would love to hear from you, please provide your comments. (Optional)"} 
+              />
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-1 px-2 py-1 border rounded bg-gray-50">
+                  <span className="text-sm">🇬🇭</span>
+                  <span className="text-sm">+233</span>
+                </div>
+                <input 
+                  type="tel" 
+                  className="flex-1 p-2 border rounded" 
+                  placeholder={question.phonePlaceholder || "Phone number"} 
+                />
+              </div>
+            </div>
           </div>
         );
       default:
@@ -478,6 +505,11 @@ const EmojiScaleEditor = ({ question, updateQuestion }) => {
           <option value="agreement">Agreement Scale</option>
           <option value="quality">Quality Rating</option>
           <option value="thumbs">Thumbs Up/Down</option>
+          <option value="recommendation_5">Recommendation (1-5)</option>
+          <option value="recommendation_10">Recommendation (1-10) - SVG</option>
+          <option value="ease_of_interaction">Ease of Interaction</option>
+          <option value="customer_satisfaction">Customer Satisfaction</option>
+          <option value="service_quality">Service Quality</option>
         </select>
       </div>
       <div className="flex items-center">
@@ -671,6 +703,68 @@ const LikertScaleEditor = ({ question, updateQuestion }) => {
         />
         <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
           Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const ContactFollowupEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Section Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter section title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Comments Placeholder</label>
+        <input
+          type="text"
+          value={question.commentsPlaceholder || "We would love to hear from you, please provide your comments. (Optional)"}
+          onChange={(e) => updateQuestion(question.id, { commentsPlaceholder: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter comments placeholder text"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Phone Number Placeholder</label>
+        <input
+          type="text"
+          value={question.phonePlaceholder || "Phone number"}
+          onChange={(e) => updateQuestion(question.id, { phonePlaceholder: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter phone number placeholder text"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Country Code</label>
+        <div className="flex items-center space-x-2 mt-1">
+          <span className="text-sm">🇬🇭</span>
+          <input
+            type="text"
+            value={question.countryCode || "+233"}
+            onChange={(e) => updateQuestion(question.id, { countryCode: e.target.value })}
+            className="input w-24"
+            placeholder="+233"
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required section
         </label>
       </div>
     </div>

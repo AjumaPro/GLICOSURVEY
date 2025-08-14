@@ -25,9 +25,18 @@ import {
   Pie,
   Cell,
   LineChart,
-  Line
+  Line,
+  AreaChart,
+  Area,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ComposedChart
 } from 'recharts';
 import EmojiScale from '../components/EmojiScale';
+import AnalyticsDashboard from '../components/AnalyticsDashboard';
 
 const SurveyAnalytics = () => {
   const { id } = useParams();
@@ -342,19 +351,180 @@ const SurveyAnalytics = () => {
         </div>
       </div>
 
+      {/* Enhanced Summary Stats */}
+      {analytics.deviceAnalytics && analytics.deviceAnalytics.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div className="analytics-card">
+            <h4 className="text-lg font-medium text-gray-900 mb-3">Device Breakdown</h4>
+            <div className="space-y-2">
+              {analytics.deviceAnalytics.map((device, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">{device.device_type}</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {device.respondent_count} ({Math.round((device.respondent_count / analytics.completion.total_sessions) * 100)}%)
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="analytics-card">
+            <h4 className="text-lg font-medium text-gray-900 mb-3">Top Browsers</h4>
+            <div className="space-y-2">
+              {analytics.browserAnalytics && analytics.browserAnalytics.slice(0, 3).map((browser, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">{browser.browser}</span>
+                  <span className="text-sm font-medium text-gray-900">
+                    {browser.respondent_count} ({Math.round((browser.respondent_count / analytics.completion.total_sessions) * 100)}%)
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <div className="analytics-card">
+            <h4 className="text-lg font-medium text-gray-900 mb-3">Peak Response Time</h4>
+            {analytics.hourlyDistribution && analytics.hourlyDistribution.length > 0 && (
+              <div className="space-y-2">
+                {(() => {
+                  const peakHour = analytics.hourlyDistribution.reduce((max, hour) => 
+                    hour.respondent_count > max.respondent_count ? hour : max
+                  );
+                  return (
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {peakHour.hour}:00
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        {peakHour.respondent_count} responses
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Response Trends */}
       {analytics.trends && analytics.trends.length > 0 && (
         <div className="analytics-card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Response Trends</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Response Trends Over Time</h3>
           <div className="chart-container">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={analytics.trends}>
+              <ComposedChart data={analytics.trends}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
+                <YAxis yAxisId="left" />
+                <YAxis yAxisId="right" orientation="right" />
+                <Tooltip />
+                <Area 
+                  yAxisId="left"
+                  type="monotone" 
+                  dataKey="daily_respondents" 
+                  fill="#3b82f6" 
+                  fillOpacity={0.3}
+                  stroke="#3b82f6" 
+                  strokeWidth={2} 
+                />
+                <Bar 
+                  yAxisId="right"
+                  dataKey="total_responses" 
+                  fill="#10b981" 
+                  fillOpacity={0.7}
+                />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Device Analytics */}
+      {analytics.deviceAnalytics && analytics.deviceAnalytics.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="analytics-card">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Device Usage</h3>
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={analytics.deviceAnalytics}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ device_type, respondent_count, percentage }) => 
+                      `${device_type} (${respondent_count})`
+                    }
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="respondent_count"
+                  >
+                    {analytics.deviceAnalytics.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div className="analytics-card">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Browser Usage</h3>
+            <div className="chart-container">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={analytics.browserAnalytics}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="browser" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="respondent_count" fill="#8b5cf6" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Hourly Distribution */}
+      {analytics.hourlyDistribution && analytics.hourlyDistribution.length > 0 && (
+        <div className="analytics-card">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Response Time Distribution (24 Hours)</h3>
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={analytics.hourlyDistribution}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="hour" />
                 <YAxis />
                 <Tooltip />
-                <Line type="monotone" dataKey="daily_respondents" stroke="#3b82f6" strokeWidth={2} />
-              </LineChart>
+                <Area 
+                  type="monotone" 
+                  dataKey="respondent_count" 
+                  fill="#f59e0b" 
+                  fillOpacity={0.6}
+                  stroke="#f59e0b" 
+                  strokeWidth={2} 
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )}
+
+      {/* Question Completion Analysis */}
+      {analytics.questionCompletion && analytics.questionCompletion.length > 0 && (
+        <div className="analytics-card">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">Question Completion Analysis</h3>
+          <div className="chart-container">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={analytics.questionCompletion} layout="horizontal">
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" domain={[0, 100]} />
+                <YAxis dataKey="title" type="category" width={150} />
+                <Tooltip />
+                <Bar dataKey="completion_rate" fill="#ef4444" />
+              </BarChart>
             </ResponsiveContainer>
           </div>
         </div>

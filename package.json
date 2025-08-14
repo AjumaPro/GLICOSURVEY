@@ -9,26 +9,37 @@
     "client": "cd client && npm start",
     "build": "cd client && npm run build",
     "install-all": "npm install && cd client && npm install",
-    "setup-db": "node server/database/setup.js"
+    "setup-db": "node server/database/setup.js",
+    "migrate": "node server/database/migrate.js",
+    "create-admin": "node server/scripts/create-super-admin.js",
+    "create-test-admin": "node server/scripts/create-admin-user.js",
+    "create-platinum-template": "node server/scripts/create-platinum-banking-template.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
+    "axios": "^1.11.0",
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
-    "pg": "^8.11.3",
-    "bcryptjs": "^2.4.3",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "firebase": "^10.7.1",
+    "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
-    "firebase": "^10.7.1",
-    "uuid": "^9.0.1",
-    "helmet": "^7.1.0",
-    "express-rate-limit": "^7.1.5"
+    "pg": "^8.11.3",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2",
-    "concurrently": "^8.2.2"
+    "concurrently": "^8.2.2",
+    "nodemon": "^3.0.2"
   },
-  "keywords": ["survey", "forms", "analytics", "emoji-scales", "drag-drop"],
+  "keywords": [
+    "survey",
+    "forms",
+    "analytics",
+    "emoji-scales",
+    "drag-drop"
+  ],
   "author": "SurveyGuy Team",
   "license": "MIT"
-} 
+}

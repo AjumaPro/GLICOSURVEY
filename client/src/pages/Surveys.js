@@ -37,6 +37,20 @@ const Surveys = () => {
 
   useEffect(() => {
     fetchSurveys();
+    
+    // Listen for survey response submissions to refresh data
+    const handleSurveyResponse = (event) => {
+      if (event.detail && event.detail.surveyId) {
+        // Refresh the surveys list to show updated response counts
+        fetchSurveys();
+      }
+    };
+    
+    window.addEventListener('surveyResponseSubmitted', handleSurveyResponse);
+    
+    return () => {
+      window.removeEventListener('surveyResponseSubmitted', handleSurveyResponse);
+    };
   }, []);
 
   const fetchSurveys = async () => {
@@ -346,13 +360,13 @@ const Surveys = () => {
                 {/* Stats */}
                 <div className="flex items-center justify-between text-sm text-gray-500">
                   <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-1">
-                      <FileText className="h-4 w-4" />
-                      <span>{survey.questions?.length || 0} questions</span>
+                    <div className="flex items-center space-x-1 bg-blue-50 px-2 py-1 rounded-md">
+                      <FileText className="h-4 w-4 text-blue-600" />
+                      <span className="font-medium text-blue-700">{survey.questions?.length || 0} questions</span>
                     </div>
-                    <div className="flex items-center space-x-1">
-                      <Users className="h-4 w-4" />
-                      <span>{survey.responses_count || 0} responses</span>
+                    <div className="flex items-center space-x-1 bg-green-50 px-2 py-1 rounded-md">
+                      <Users className="h-4 w-4 text-green-600" />
+                      <span className="font-medium text-green-700">{survey.responses_count || 0} responses</span>
                     </div>
                   </div>
                   <div className="flex items-center space-x-1">

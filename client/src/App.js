@@ -16,6 +16,8 @@ import PublishSurvey from './pages/PublishSurvey';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import AdminDashboard from './pages/AdminDashboard';
+import EmojiTest from './pages/EmojiTest';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -57,9 +59,9 @@ function AppRoutes() {
         </PublicRoute>
       } />
       <Route path="/register" element={
-        <PublicRoute>
+        <ProtectedRoute>
           <Register />
-        </PublicRoute>
+        </ProtectedRoute>
       } />
       
       {/* Survey Response Route (Public) */}
@@ -84,7 +86,9 @@ function AppRoutes() {
            <Route path="builder/:id" element={<SurveyBuilder />} />
            <Route path="publish/:id" element={<PublishSurvey />} />
         <Route path="analytics/:id" element={<SurveyAnalytics />} />
+        <Route path="admin" element={<AdminDashboard />} />
         <Route path="profile" element={<Profile />} />
+        <Route path="emoji-test" element={<EmojiTest />} />
       </Route>
       
       {/* Catch all route */}

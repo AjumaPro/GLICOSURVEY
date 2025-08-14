@@ -3,10 +3,58 @@ const router = express.Router();
 const { query } = require('../database/connection');
 const { v4: uuidv4 } = require('uuid');
 
+// Helper function to get location from IP (simplified version)
+const getLocationFromIP = async (ip) => {
+  try {
+    // Skip localhost and private IPs
+    if (ip === '::1' || ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.')) {
+      return {
+        country: 'Local',
+        region: 'Development',
+        city: 'Localhost',
+        timezone: 'UTC'
+      };
+    }
+
+    // For production, you would use a service like ipapi.co, ipinfo.io, or MaxMind
+    // This is a simplified version that returns basic info
+    const response = await fetch(`http://ip-api.com/json/${ip}?fields=country,regionName,city,timezone`, {
+      timeout: 5000 // 5 second timeout
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    
+    const data = await response.json();
+    return {
+      country: data.country || 'Unknown',
+      region: data.regionName || 'Unknown',
+      city: data.city || 'Unknown',
+      timezone: data.timezone || 'Unknown'
+    };
+  } catch (error) {
+    console.log('Error getting location from IP:', error.message);
+    return {
+      country: 'Unknown',
+      region: 'Unknown',
+      city: 'Unknown',
+      timezone: 'Unknown'
+    };
+  }
+};
+
 // POST /api/responses - Submit survey responses
 router.post('/', async (req, res) => {
   try {
     const { surveyId, responses, sessionId } = req.body;
+
+    console.log('Received response submission:', { surveyId, responsesCount: responses?.length, sessionId });
+
+    // Validate input
+    if (!surveyId || !responses || !Array.isArray(responses) || responses.length === 0) {
+      return res.status(400).json({ error: 'Invalid request data' });
+    }
 
     // Validate survey exists and is published
     const surveyResult = await query(
@@ -15,11 +63,14 @@ router.post('/', async (req, res) => {
     );
 
     if (surveyResult.rows.length === 0) {
+      console.log('Survey not found or not published:', surveyId);
       return res.status(404).json({ error: 'Survey not found or not published' });
     }
 
     // Generate session ID if not provided
     const respondentSessionId = sessionId || uuidv4();
+
+    console.log('Processing responses for survey:', surveyId, 'session:', respondentSessionId);
 
     // Start a transaction
     await query('BEGIN');
@@ -29,6 +80,8 @@ router.post('/', async (req, res) => {
       for (const response of responses) {
         const { questionId, answer } = response;
 
+        console.log('Processing response:', { questionId, answer });
+
         // Validate question exists and belongs to survey
         const questionResult = await query(
           'SELECT id FROM questions WHERE id = $1 AND survey_id = $2',
@@ -36,26 +89,51 @@ router.post('/', async (req, res) => {
         );
 
         if (questionResult.rows.length === 0) {
-          throw new Error(`Question ${questionId} not found`);
+          throw new Error(`Question ${questionId} not found in survey ${surveyId}`);
         }
 
-        // Insert response
-        await query(
-          `INSERT INTO responses (survey_id, question_id, answer, session_id)
-           VALUES ($1, $2, $3, $4)`,
-          [surveyId, questionId, JSON.stringify(answer), respondentSessionId]
+        // Get location data from IP
+        const ipAddress = req.ip || req.connection.remoteAddress || '';
+        const locationData = await getLocationFromIP(ipAddress);
+
+        // Insert response with additional metadata
+        const insertResult = await query(
+          `INSERT INTO responses (survey_id, question_id, answer, session_id, metadata)
+           VALUES ($1, $2, $3, $4, $5)
+           RETURNING id`,
+          [
+            surveyId, 
+            questionId, 
+            JSON.stringify(answer), 
+            respondentSessionId,
+            JSON.stringify({
+              userAgent: req.headers['user-agent'] || '',
+              ipAddress: ipAddress,
+              timestamp: new Date().toISOString(),
+              referrer: req.headers.referer || '',
+              language: req.headers['accept-language'] || '',
+              timezone: req.headers['timezone'] || '',
+              location: locationData
+            })
+          ]
         );
+
+        console.log('Inserted response with ID:', insertResult.rows[0].id);
       }
 
       await query('COMMIT');
 
+      console.log('Successfully submitted all responses for session:', respondentSessionId);
+
       res.status(201).json({ 
         message: 'Responses submitted successfully',
-        sessionId: respondentSessionId
+        sessionId: respondentSessionId,
+        surveyId: surveyId
       });
 
     } catch (error) {
       await query('ROLLBACK');
+      console.error('Transaction error:', error);
       throw error;
     }
 

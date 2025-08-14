@@ -13,7 +13,8 @@ import {
   Sparkles,
   Edit,
   Copy,
-  Trash2
+  Trash2,
+  Settings
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -21,6 +22,9 @@ const SurveyTemplates = () => {
   const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [showCustomizeModal, setShowCustomizeModal] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [customizedTemplate, setCustomizedTemplate] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -88,6 +92,80 @@ const SurveyTemplates = () => {
       console.error('Error deleting template:', error);
       toast.error('Failed to delete template');
     }
+  };
+
+  const openCustomizeModal = (template) => {
+    setSelectedTemplate(template);
+    setCustomizedTemplate({
+      ...template,
+      title: template.title,
+      description: template.description,
+      questions: template.questions ? [...template.questions] : []
+    });
+    setShowCustomizeModal(true);
+  };
+
+  const handleCustomizeSave = async () => {
+    try {
+      const response = await axios.post(`/api/templates/${selectedTemplate.id}/customize`, customizedTemplate);
+      toast.success('Customized template saved successfully!');
+      setShowCustomizeModal(false);
+      setSelectedTemplate(null);
+      setCustomizedTemplate(null);
+      // Navigate to the survey builder with the new survey
+      navigate(`/builder/${response.data.surveyId}`);
+    } catch (error) {
+      console.error('Error saving customized template:', error);
+      toast.error('Failed to save customized template');
+    }
+  };
+
+  const handleSaveAsNewTemplate = async () => {
+    try {
+      const response = await axios.post('/api/templates', {
+        title: `${customizedTemplate.title} (Customized)`,
+        description: customizedTemplate.description,
+        questions: customizedTemplate.questions
+      });
+      toast.success('Customized template saved as new template!');
+      setShowCustomizeModal(false);
+      setSelectedTemplate(null);
+      setCustomizedTemplate(null);
+      fetchTemplates(); // Refresh the list
+    } catch (error) {
+      console.error('Error saving as new template:', error);
+      toast.error('Failed to save as new template');
+    }
+  };
+
+  const updateCustomizedQuestion = (index, field, value) => {
+    setCustomizedTemplate(prev => ({
+      ...prev,
+      questions: prev.questions.map((q, i) => 
+        i === index ? { ...q, [field]: value } : q
+      )
+    }));
+  };
+
+  const addCustomizedQuestion = () => {
+    const newQuestion = {
+      id: Date.now(),
+      text: '',
+      type: 'text',
+      required: false,
+      options: []
+    };
+    setCustomizedTemplate(prev => ({
+      ...prev,
+      questions: [...prev.questions, newQuestion]
+    }));
+  };
+
+  const removeCustomizedQuestion = (index) => {
+    setCustomizedTemplate(prev => ({
+      ...prev,
+      questions: prev.questions.filter((_, i) => i !== index)
+    }));
   };
 
   const getTemplateIcon = (templateId) => {
@@ -364,13 +442,13 @@ const SurveyTemplates = () => {
                     )}
                   </button>
                   
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     <button
-                      onClick={() => navigate(`/templates/${template.id}/edit`)}
+                      onClick={() => openCustomizeModal(template)}
                       className="btn-secondary text-sm py-2"
                     >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Edit
+                      <Settings className="h-4 w-4 mr-1" />
+                      Customize
                     </button>
                     <button
                       onClick={() => duplicateTemplate(template.id, template)}
@@ -378,6 +456,15 @@ const SurveyTemplates = () => {
                     >
                       <Copy className="h-4 w-4 mr-1" />
                       Duplicate
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => navigate(`/templates/${template.id}/edit`)}
+                      className="btn-secondary text-sm py-2"
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Edit
                     </button>
                     <button
                       onClick={() => deleteTemplate(template.id)}
@@ -417,6 +504,315 @@ const SurveyTemplates = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Customize Template Modal */}
+      {showCustomizeModal && customizedTemplate && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Customize Template: {selectedTemplate?.title}
+                </h2>
+                <button
+                  onClick={() => setShowCustomizeModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <span className="sr-only">Close</span>
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {/* Template Details */}
+              <div className="mb-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Template Details</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Template Title
+                    </label>
+                    <input
+                      type="text"
+                      value={customizedTemplate.title}
+                      onChange={(e) => setCustomizedTemplate(prev => ({ ...prev, title: e.target.value }))}
+                      className="input w-full"
+                      placeholder="Enter template title"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Description
+                    </label>
+                    <textarea
+                      value={customizedTemplate.description}
+                      onChange={(e) => setCustomizedTemplate(prev => ({ ...prev, description: e.target.value }))}
+                      className="input w-full"
+                      rows={3}
+                      placeholder="Enter template description"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Questions */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">Questions</h3>
+                  <button
+                    onClick={addCustomizedQuestion}
+                    className="btn-secondary text-sm"
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Question
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  {customizedTemplate.questions.map((question, index) => (
+                    <div key={index} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between mb-4">
+                        <span className="text-sm font-medium text-gray-700">
+                          Question {index + 1}
+                        </span>
+                        <button
+                          onClick={() => removeCustomizedQuestion(index)}
+                          className="text-red-400 hover:text-red-600"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Question Text
+                          </label>
+                          <input
+                            type="text"
+                            value={question.text || question.title || ''}
+                            onChange={(e) => updateCustomizedQuestion(index, 'text', e.target.value)}
+                            className="input w-full"
+                            placeholder="Enter your question"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Question Type
+                            </label>
+                            <select
+                              value={question.type}
+                              onChange={(e) => updateCustomizedQuestion(index, 'type', e.target.value)}
+                              className="input"
+                            >
+                              <option value="text">Text</option>
+                              <option value="multiple_choice">Multiple Choice</option>
+                              <option value="emoji_scale">Emoji Scale</option>
+                              <option value="scale">Scale (1-5)</option>
+                              <option value="contact_followup">Comments & Phone</option>
+                            </select>
+                          </div>
+                          <div className="flex items-center">
+                            <label className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={question.required}
+                                onChange={(e) => updateCustomizedQuestion(index, 'required', e.target.checked)}
+                                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+                              />
+                              <span className="ml-2 text-sm text-gray-700">Required</span>
+                            </label>
+                          </div>
+                        </div>
+
+                        {/* Options for multiple choice */}
+                        {question.type === 'multiple_choice' && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Options
+                            </label>
+                            <div className="space-y-2">
+                              {(question.options || []).map((option, optionIndex) => (
+                                <div key={optionIndex} className="flex items-center space-x-2">
+                                  <input
+                                    type="text"
+                                    value={typeof option === 'object' ? option.label || option.value : option}
+                                    onChange={(e) => {
+                                      const newOptions = [...(question.options || [])];
+                                      newOptions[optionIndex] = e.target.value;
+                                      updateCustomizedQuestion(index, 'options', newOptions);
+                                    }}
+                                    className="input flex-1"
+                                    placeholder={`Option ${optionIndex + 1}`}
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      const newOptions = (question.options || []).filter((_, j) => j !== optionIndex);
+                                      updateCustomizedQuestion(index, 'options', newOptions);
+                                    }}
+                                    className="text-red-400 hover:text-red-600"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              ))}
+                              <button
+                                onClick={() => {
+                                  const newOptions = [...(question.options || []), ''];
+                                  updateCustomizedQuestion(index, 'options', newOptions);
+                                }}
+                                className="btn-secondary text-sm"
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Add Option
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Options for emoji scale */}
+                        {question.type === 'emoji_scale' && (
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Emoji Scale Options
+                            </label>
+                            <div className="space-y-2">
+                              {(question.options || []).map((option, optionIndex) => (
+                                <div key={optionIndex} className="flex items-center space-x-2">
+                                  <input
+                                    type="text"
+                                    value={option.emoji || ''}
+                                    onChange={(e) => {
+                                      const newOptions = [...(question.options || [])];
+                                      newOptions[optionIndex] = { ...newOptions[optionIndex], emoji: e.target.value };
+                                      updateCustomizedQuestion(index, 'options', newOptions);
+                                    }}
+                                    className="input w-20"
+                                    placeholder="😊"
+                                  />
+                                  <input
+                                    type="number"
+                                    value={option.value || ''}
+                                    onChange={(e) => {
+                                      const newOptions = [...(question.options || [])];
+                                      newOptions[optionIndex] = { ...newOptions[optionIndex], value: parseInt(e.target.value) };
+                                      updateCustomizedQuestion(index, 'options', newOptions);
+                                    }}
+                                    className="input w-20"
+                                    placeholder="1"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={option.label || ''}
+                                    onChange={(e) => {
+                                      const newOptions = [...(question.options || [])];
+                                      newOptions[optionIndex] = { ...newOptions[optionIndex], label: e.target.value };
+                                      updateCustomizedQuestion(index, 'options', newOptions);
+                                    }}
+                                    className="input flex-1"
+                                    placeholder="Label"
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      const newOptions = (question.options || []).filter((_, j) => j !== optionIndex);
+                                      updateCustomizedQuestion(index, 'options', newOptions);
+                                    }}
+                                    className="text-red-400 hover:text-red-600"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              ))}
+                              <button
+                                onClick={() => {
+                                  const newOptions = [...(question.options || []), { emoji: '', value: '', label: '' }];
+                                  updateCustomizedQuestion(index, 'options', newOptions);
+                                }}
+                                className="btn-secondary text-sm"
+                              >
+                                <Plus className="h-3 w-3 mr-1" />
+                                Add Emoji Option
+                              </button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Settings for contact followup */}
+                        {question.type === 'contact_followup' && (
+                          <div className="space-y-4">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Comments Placeholder
+                              </label>
+                              <input
+                                type="text"
+                                value={question.commentsPlaceholder || ''}
+                                onChange={(e) => updateCustomizedQuestion(index, 'commentsPlaceholder', e.target.value)}
+                                className="input w-full"
+                                placeholder="We would love to hear from you, please provide your comments. (Optional)"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Phone Number Placeholder
+                              </label>
+                              <input
+                                type="text"
+                                value={question.phonePlaceholder || ''}
+                                onChange={(e) => updateCustomizedQuestion(index, 'phonePlaceholder', e.target.value)}
+                                className="input w-full"
+                                placeholder="Phone number"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Country Code
+                              </label>
+                              <input
+                                type="text"
+                                value={question.countryCode || '+233'}
+                                onChange={(e) => updateCustomizedQuestion(index, 'countryCode', e.target.value)}
+                                className="input w-32"
+                                placeholder="+233"
+                              />
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowCustomizeModal(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleCustomizeSave}
+                className="btn-primary"
+              >
+                Save Customizations
+              </button>
+              <button
+                onClick={handleSaveAsNewTemplate}
+                className="btn-primary"
+              >
+                Save as New Template
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -71,6 +71,12 @@ const Dashboard = () => {
     }
   ];
 
+  // Calculate additional metrics
+  const totalQuestions = dashboardData?.top_surveys?.reduce((sum, survey) => sum + (survey.question_count || 0), 0) || 0;
+  const avgResponsesPerSurvey = dashboardData?.summary?.total_respondents > 0 && dashboardData?.summary?.published_surveys > 0 
+    ? Math.round(dashboardData.summary.total_respondents / dashboardData.summary.published_surveys)
+    : 0;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -115,6 +121,55 @@ const Dashboard = () => {
             </div>
           );
         })}
+      </div>
+
+      {/* Enhanced Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="card p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Total Questions</p>
+              <p className="text-2xl font-bold text-indigo-600">{totalQuestions}</p>
+            </div>
+            <div className="text-indigo-400">
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="card p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Avg Responses/Survey</p>
+              <p className="text-2xl font-bold text-emerald-600">{avgResponsesPerSurvey}</p>
+            </div>
+            <div className="text-emerald-400">
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div className="card p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-600">Response Rate</p>
+              <p className="text-2xl font-bold text-amber-600">
+                {dashboardData?.summary?.published_surveys > 0 
+                  ? Math.round((dashboardData.summary.total_respondents / dashboardData.summary.published_surveys) * 10)
+                  : 0}%
+              </p>
+            </div>
+            <div className="text-amber-400">
+              <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Templates Section for First-time Users */}

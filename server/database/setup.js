@@ -58,6 +58,7 @@ const createTables = async () => {
         answer JSONB NOT NULL,
         respondent_id VARCHAR(255),
         session_id VARCHAR(255),
+        metadata JSONB DEFAULT '{}',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);

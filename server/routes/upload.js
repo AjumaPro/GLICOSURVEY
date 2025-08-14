@@ -213,32 +213,79 @@ router.post('/emoji-scale', auth, upload.array('images', 10), async (req, res) =
 // GET /api/upload/emoji-scales - Get emoji scale templates
 router.get('/emoji-scales', async (req, res) => {
   try {
-    // Return predefined emoji scale templates
+    // Return predefined emoji scale templates (now using custom SVG emojis)
     const emojiScales = {
       satisfaction: [
-        { value: 1, label: 'Very Dissatisfied', emoji: '😞' },
-        { value: 2, label: 'Dissatisfied', emoji: '😐' },
-        { value: 3, label: 'Neutral', emoji: '😐' },
-        { value: 4, label: 'Satisfied', emoji: '🙂' },
-        { value: 5, label: 'Very Satisfied', emoji: '😊' }
+        { value: 1, label: 'Very Unsatisfied' },
+        { value: 2, label: 'Unsatisfied' },
+        { value: 3, label: 'Neutral' },
+        { value: 4, label: 'Satisfied' },
+        { value: 5, label: 'Very Satisfied' }
       ],
       agreement: [
-        { value: 1, label: 'Strongly Disagree', emoji: '👎' },
-        { value: 2, label: 'Disagree', emoji: '👎' },
-        { value: 3, label: 'Neutral', emoji: '🤷' },
-        { value: 4, label: 'Agree', emoji: '👍' },
-        { value: 5, label: 'Strongly Agree', emoji: '👍' }
+        { value: 1, label: 'Strongly Disagree' },
+        { value: 2, label: 'Disagree' },
+        { value: 3, label: 'Neutral' },
+        { value: 4, label: 'Agree' },
+        { value: 5, label: 'Strongly Agree' }
       ],
       quality: [
-        { value: 1, label: 'Poor', emoji: '⭐' },
-        { value: 2, label: 'Fair', emoji: '⭐⭐' },
-        { value: 3, label: 'Good', emoji: '⭐⭐⭐' },
-        { value: 4, label: 'Very Good', emoji: '⭐⭐⭐⭐' },
-        { value: 5, label: 'Excellent', emoji: '⭐⭐⭐⭐⭐' }
+        { value: 1, label: 'Poor' },
+        { value: 2, label: 'Fair' },
+        { value: 3, label: 'Good' },
+        { value: 4, label: 'Very Good' },
+        { value: 5, label: 'Excellent' }
       ],
       thumbs: [
         { value: 1, label: 'Thumbs Down', emoji: '👎' },
         { value: 2, label: 'Thumbs Up', emoji: '👍' }
+      ],
+      recommendation_5: [
+        { value: 1, label: 'Very Unlikely' },
+        { value: 2, label: 'Unlikely' },
+        { value: 3, label: 'Neutral' },
+        { value: 4, label: 'Likely' },
+        { value: 5, label: 'Very Likely' }
+      ],
+      recommendation_10: [
+        { value: 1, label: 'Unlikely' },
+        { value: 2, label: 'Unlikely' },
+        { value: 3, label: 'Unlikely' },
+        { value: 4, label: 'Unlikely' },
+        { value: 5, label: 'Unlikely' },
+        { value: 6, label: 'Unlikely' },
+        { value: 7, label: 'Neutral' },
+        { value: 8, label: 'Neutral' },
+        { value: 9, label: 'Likely' },
+        { value: 10, label: 'Likely' }
+      ],
+      customer_satisfaction: [
+        { value: 1, label: 'Very Dissatisfied' },
+        { value: 2, label: 'Dissatisfied' },
+        { value: 3, label: 'Neutral' },
+        { value: 4, label: 'Satisfied' },
+        { value: 5, label: 'Very Satisfied' }
+      ],
+      ease_of_use: [
+        { value: 1, label: 'Very Difficult' },
+        { value: 2, label: 'Difficult' },
+        { value: 3, label: 'Moderate' },
+        { value: 4, label: 'Easy' },
+        { value: 5, label: 'Very Easy' }
+      ],
+      stars: [
+        { value: 1, label: '1 Star', emoji: '⭐' },
+        { value: 2, label: '2 Stars', emoji: '⭐⭐' },
+        { value: 3, label: '3 Stars', emoji: '⭐⭐⭐' },
+        { value: 4, label: '4 Stars', emoji: '⭐⭐⭐⭐' },
+        { value: 5, label: '5 Stars', emoji: '⭐⭐⭐⭐⭐' }
+      ],
+      hearts: [
+        { value: 1, label: '1 Heart', emoji: '❤️' },
+        { value: 2, label: '2 Hearts', emoji: '❤️❤️' },
+        { value: 3, label: '3 Hearts', emoji: '❤️❤️❤️' },
+        { value: 4, label: '4 Hearts', emoji: '❤️❤️❤️❤️' },
+        { value: 5, label: '5 Hearts', emoji: '❤️❤️❤️❤️❤️' }
       ]
     };
 

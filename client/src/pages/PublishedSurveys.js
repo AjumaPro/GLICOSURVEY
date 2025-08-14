@@ -44,6 +44,20 @@ const PublishedSurveys = () => {
 
   useEffect(() => {
     fetchPublishedSurveys();
+    
+    // Listen for survey response submissions to refresh data
+    const handleSurveyResponse = (event) => {
+      if (event.detail && event.detail.surveyId) {
+        // Refresh the surveys list to show updated response counts
+        fetchPublishedSurveys();
+      }
+    };
+    
+    window.addEventListener('surveyResponseSubmitted', handleSurveyResponse);
+    
+    return () => {
+      window.removeEventListener('surveyResponseSubmitted', handleSurveyResponse);
+    };
   }, []);
 
   const fetchPublishedSurveys = async () => {

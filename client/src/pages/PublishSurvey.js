@@ -49,7 +49,21 @@ const PublishSurvey = () => {
     if (id) {
       fetchSurvey();
     }
-  }, [fetchSurvey]);
+    
+    // Listen for survey response submissions to refresh data
+    const handleSurveyResponse = (event) => {
+      if (event.detail && event.detail.surveyId === parseInt(id)) {
+        // Refresh the survey data to show updated response counts
+        fetchSurvey();
+      }
+    };
+    
+    window.addEventListener('surveyResponseSubmitted', handleSurveyResponse);
+    
+    return () => {
+      window.removeEventListener('surveyResponseSubmitted', handleSurveyResponse);
+    };
+  }, [fetchSurvey, id]);
 
   const publishSurvey = async () => {
     try {
@@ -204,7 +218,7 @@ const PublishSurvey = () => {
                   <Users className="h-8 w-8 text-green-600" />
                   <div className="ml-3">
                     <p className="text-sm font-medium text-green-600">Responses</p>
-                    <p className="text-2xl font-bold text-green-900">0</p>
+                    <p className="text-2xl font-bold text-green-900">{survey.responses_count || 0}</p>
                   </div>
                 </div>
               </div>

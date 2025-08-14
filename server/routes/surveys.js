@@ -9,7 +9,7 @@ router.get('/', auth, async (req, res) => {
     const result = await query(
       `SELECT s.*, 
               COUNT(q.id) as question_count,
-              COUNT(DISTINCT r.id) as response_count
+              COUNT(DISTINCT r.session_id) as responses_count
        FROM surveys s
        LEFT JOIN questions q ON s.id = q.survey_id
        LEFT JOIN responses r ON s.id = r.survey_id
@@ -31,9 +31,13 @@ router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
     
-    // Get survey details
+    // Get survey details with response count
     const surveyResult = await query(
-      'SELECT * FROM surveys WHERE id = $1',
+      `SELECT s.*, COUNT(DISTINCT r.session_id) as responses_count
+       FROM surveys s
+       LEFT JOIN responses r ON s.id = r.survey_id
+       WHERE s.id = $1
+       GROUP BY s.id`,
       [id]
     );
 
@@ -359,7 +363,7 @@ router.get('/:id/share', auth, async (req, res) => {
     const shareId = Math.random().toString(36).substring(2, 8).toUpperCase();
     
     // Create share URL
-    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3001';
     const shareUrl = `${baseUrl}/survey/${shareId}`;
     const shortUrl = `${baseUrl}/s/${shareId}`;
     

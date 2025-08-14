@@ -911,6 +911,40 @@ const surveyTemplates = {
   }
 };
 
+// POST /api/templates - Create a new template
+router.post('/', auth, async (req, res) => {
+  try {
+    const { title, description, questions } = req.body;
+    
+    if (!title || !questions || !Array.isArray(questions)) {
+      return res.status(400).json({ error: 'Title and questions array are required' });
+    }
+    
+    // Generate a unique template ID
+    const templateId = `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Add the new template to the templates object
+    surveyTemplates[templateId] = {
+      id: templateId,
+      title,
+      description,
+      questions: questions.map((q, index) => ({
+        ...q,
+        id: index + 1
+      }))
+    };
+    
+    res.status(201).json({
+      message: 'Template created successfully',
+      template: surveyTemplates[templateId]
+    });
+    
+  } catch (error) {
+    console.error('Error creating template:', error);
+    res.status(500).json({ error: 'Failed to create template' });
+  }
+});
+
 // GET /api/templates - Get all available templates
 router.get('/', auth, async (req, res) => {
   try {
@@ -1004,6 +1038,71 @@ router.post('/:id/create', auth, async (req, res) => {
   } catch (error) {
     console.error('Error creating survey from template:', error);
     res.status(500).json({ error: 'Failed to create survey from template' });
+  }
+});
+
+// POST /api/templates/:id/customize - Save customized template
+router.post('/:id/customize', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, questions } = req.body;
+    
+    if (!surveyTemplates[id]) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+    
+    // Create a new survey with the customized template
+    const surveyResult = await query(
+      `INSERT INTO surveys (user_id, title, description, status, theme, settings)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id`,
+      [
+        req.user.id,
+        title,
+        description,
+        'draft',
+        JSON.stringify({ primaryColor: '#3B82F6', secondaryColor: '#1E40AF' }),
+        JSON.stringify({ allowAnonymous: true, showProgress: true })
+      ]
+    );
+    
+    const surveyId = surveyResult.rows[0].id;
+    
+    // Create questions from customized template
+    for (let i = 0; i < questions.length; i++) {
+      const question = questions[i];
+      await query(
+        `INSERT INTO questions (survey_id, title, type, required, options, order_index, settings)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          surveyId,
+          question.text || question.title,
+          question.type,
+          question.required,
+          JSON.stringify(question.options || []),
+          i + 1,
+          JSON.stringify({
+            commentsPlaceholder: question.commentsPlaceholder,
+            phonePlaceholder: question.phonePlaceholder,
+            countryCode: question.countryCode
+          })
+        ]
+      );
+    }
+    
+    res.json({
+      message: 'Customized template saved successfully',
+      surveyId,
+      survey: {
+        id: surveyId,
+        title,
+        description
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error saving customized template:', error);
+    res.status(500).json({ error: 'Failed to save customized template' });
   }
 });
 

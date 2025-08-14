@@ -5,14 +5,43 @@ const jwt = require('jsonwebtoken');
 const { query } = require('../database/connection');
 const auth = require('../middleware/auth');
 
-// POST /api/auth/register - Register a new user
-router.post('/register', async (req, res) => {
+// POST /api/auth/register - Register a new user (Admin only)
+router.post('/register', auth, async (req, res) => {
   try {
-    const { email, password, username } = req.body;
+    // Check if the authenticated user is an admin or super admin
+    const adminResult = await query(
+      'SELECT role FROM users WHERE id = $1',
+      [req.user.id]
+    );
+
+    if (adminResult.rows.length === 0) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+
+    const adminUser = adminResult.rows[0];
+    if (adminUser.role !== 'admin' && adminUser.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Only admins can create new accounts' });
+    }
+
+    const { email, password, username, role = 'user' } = req.body;
 
     // Validate input
-    if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required' });
+    if (!email || !password || !username) {
+      return res.status(400).json({ error: 'Email, password, and username are required' });
+    }
+
+    // Validate role (admins can only create regular users, super admins can create any role)
+    const validRoles = ['user', 'admin'];
+    if (adminUser.role === 'admin' && role !== 'user') {
+      return res.status(403).json({ error: 'Admins can only create regular user accounts' });
+    }
+
+    if (adminUser.role === 'super_admin') {
+      validRoles.push('super_admin');
+    }
+
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ error: 'Invalid role' });
     }
 
     // Check if user already exists
@@ -31,29 +60,23 @@ router.post('/register', async (req, res) => {
 
     // Create user
     const result = await query(
-      `INSERT INTO users (email, password_hash, name)
-       VALUES ($1, $2, $3)
+      `INSERT INTO users (email, password_hash, name, role, created_by)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING id, email, name, role, created_at`,
-      [email, passwordHash, username || '']
+      [email, passwordHash, username, role, req.user.id]
     );
 
     const user = result.rows[0];
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { userId: user.id },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
     res.status(201).json({
+      message: 'User created successfully',
       user: {
         id: user.id,
         email: user.email,
         username: user.name,
-        role: user.role
-      },
-      token
+        role: user.role,
+        created_at: user.created_at
+      }
     });
 
   } catch (error) {

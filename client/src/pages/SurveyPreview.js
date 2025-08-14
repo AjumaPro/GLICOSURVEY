@@ -306,7 +306,7 @@ const SurveyPreview = () => {
               <div className="flex items-center">
                 <Users className="h-5 w-5 text-green-600 mr-2" />
                 <div>
-                  <div className="text-lg font-bold text-gray-900">{survey.response_count || 0}</div>
+                  <div className="text-lg font-bold text-gray-900">{survey.responses_count || 0}</div>
                   <div className="text-sm text-gray-500">Responses</div>
                 </div>
               </div>
