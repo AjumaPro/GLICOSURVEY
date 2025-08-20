@@ -80,7 +80,8 @@ dist
 
 # Gatsby files
 .cache/
-public
+# Allow web.config in public folder
+!client/public/web.config
 
 # Storybook build outputs
 .out
