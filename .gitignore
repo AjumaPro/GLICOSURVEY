@@ -6,6 +6,9 @@ yarn-error.log*
 
 # Production builds
 build/
+# Allow build files for deployment
+!client/build/
+!client/build/**
 dist/
 .next/
 out/
