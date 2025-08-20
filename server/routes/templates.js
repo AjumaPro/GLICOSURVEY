@@ -104,7 +104,7 @@ router.post('/', auth, async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
       [
-        title,
+      title,
         description || '',
         category || 'Custom',
         JSON.stringify(template_data),
@@ -352,7 +352,7 @@ router.post('/:id/create', auth, async (req, res) => {
       `INSERT INTO survey_versions (survey_id, version_number, title, description, theme, settings, questions_data, created_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
-        surveyId,
+      surveyId,
         1,
         title || templateData.title || template.name,
         description || templateData.description || template.description,
@@ -489,7 +489,7 @@ router.post('/:id/customize', auth, async (req, res) => {
       `INSERT INTO survey_versions (survey_id, version_number, title, description, theme, settings, questions_data, created_by)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
-        surveyId,
+      surveyId,
         1,
         title || template.name,
         description || template.description,
@@ -539,7 +539,7 @@ router.put('/:id', auth, async (req, res) => {
     if (templateCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Template not found' });
     }
-
+    
     // Update template
     const result = await query(
       `UPDATE custom_templates 
