@@ -102,7 +102,7 @@ const SurveyPreview = () => {
 
   const publishSurvey = async () => {
     try {
-      await axios.put(`/api/surveys/${id}`, { status: 'published' });
+      await axios.post(`/api/surveys/${id}/publish`);
       setSurvey({ ...survey, status: 'published' });
       toast.success('Survey published successfully');
     } catch (error) {
@@ -113,7 +113,7 @@ const SurveyPreview = () => {
 
   const unpublishSurvey = async () => {
     try {
-      await axios.put(`/api/surveys/${id}`, { status: 'draft' });
+      await axios.post(`/api/surveys/${id}/unpublish`);
       setSurvey({ ...survey, status: 'draft' });
       toast.success('Survey unpublished successfully');
     } catch (error) {

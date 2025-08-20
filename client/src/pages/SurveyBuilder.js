@@ -24,7 +24,7 @@ const SurveyBuilder = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [survey, setSurvey] = useState({
-    title: '',
+    title: 'Untitled Survey',
     description: '',
     status: 'draft'
   });
@@ -61,6 +61,7 @@ const SurveyBuilder = () => {
       setLoading(true);
       const surveyData = {
         ...survey,
+        title: survey.title || 'Untitled Survey',
         questions: questions.map((q, index) => ({ ...q, order_index: index }))
       };
 
@@ -97,8 +98,15 @@ const SurveyBuilder = () => {
       title: '',
       description: '',
       required: false,
-      options: type === 'emoji_scale' ? emojiScaleTemplates.satisfaction : [],
-      settings: {}
+      options: type === 'emoji_scale' ? emojiScaleTemplates.satisfaction : 
+               type === 'likert_scale' ? [
+                 { value: 1, label: 'Strongly Disagree' },
+                 { value: 2, label: 'Disagree' },
+                 { value: 3, label: 'Neutral' },
+                 { value: 4, label: 'Agree' },
+                 { value: 5, label: 'Strongly Agree' }
+               ] : [],
+      settings: type === 'likert_scale' ? { min: 1, max: 5 } : {}
     };
 
     setQuestions([...questions, newQuestion]);
@@ -187,6 +195,24 @@ const SurveyBuilder = () => {
           <div className="p-4 border rounded-lg">
             <h4 className="font-medium mb-2">{question.title}</h4>
             <textarea className="w-full p-2 border rounded" rows="3" placeholder="Your answer..." />
+          </div>
+        );
+      case 'likert_scale':
+        return (
+          <div className="p-4 border rounded-lg">
+            <h4 className="font-medium mb-2">{question.title}</h4>
+            <div className="flex justify-center space-x-4">
+              {question.options?.map((option, index) => (
+                <label key={index} className="flex flex-col items-center">
+                  <input
+                    type="radio"
+                    name={`preview-${question.id}`}
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                  />
+                  <span className="mt-1 text-sm text-gray-700">{option.label}</span>
+                </label>
+              ))}
+            </div>
           </div>
         );
       case 'contact_followup':
@@ -655,6 +681,30 @@ const TextEditor = ({ question, updateQuestion }) => {
 };
 
 const LikertScaleEditor = ({ question, updateQuestion }) => {
+  const generateOptions = (min, max) => {
+    const options = [];
+    const labels = ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'];
+    
+    for (let i = min; i <= max; i++) {
+      const labelIndex = Math.floor(((i - min) / (max - min)) * (labels.length - 1));
+      options.push({
+        value: i,
+        label: labels[labelIndex] || `Option ${i}`
+      });
+    }
+    return options;
+  };
+
+  const handleScaleChange = (field, value) => {
+    const newSettings = { ...question.settings, [field]: parseInt(value) };
+    const newOptions = generateOptions(newSettings.min || 1, newSettings.max || 5);
+    
+    updateQuestion(question.id, {
+      settings: newSettings,
+      options: newOptions
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -673,9 +723,7 @@ const LikertScaleEditor = ({ question, updateQuestion }) => {
           <input
             type="number"
             value={question.settings.min || 1}
-            onChange={(e) => updateQuestion(question.id, {
-              settings: { ...question.settings, min: parseInt(e.target.value) }
-            })}
+            onChange={(e) => handleScaleChange('min', e.target.value)}
             className="input w-20"
             min="1"
             max="10"
@@ -683,14 +731,33 @@ const LikertScaleEditor = ({ question, updateQuestion }) => {
           <span>to</span>
           <input
             type="number"
-            value={question.settings.max || 10}
-            onChange={(e) => updateQuestion(question.id, {
-              settings: { ...question.settings, max: parseInt(e.target.value) }
-            })}
+            value={question.settings.max || 5}
+            onChange={(e) => handleScaleChange('max', e.target.value)}
             className="input w-20"
             min="1"
             max="10"
           />
+        </div>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Scale Options</label>
+        <div className="mt-2 space-y-2">
+          {question.options?.map((option, index) => (
+            <div key={index} className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={option.label}
+                onChange={(e) => {
+                  const newOptions = [...question.options];
+                  newOptions[index] = { ...option, label: e.target.value };
+                  updateQuestion(question.id, { options: newOptions });
+                }}
+                className="input flex-1"
+                placeholder={`Option ${option.value}`}
+              />
+              <span className="text-sm text-gray-500">(Value: {option.value})</span>
+            </div>
+          ))}
         </div>
       </div>
       <div className="flex items-center">

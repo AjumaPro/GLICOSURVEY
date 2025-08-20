@@ -68,10 +68,7 @@ const PublishSurvey = () => {
   const publishSurvey = async () => {
     try {
       setPublishing(true);
-      await axios.put(`/api/surveys/${id}`, {
-        ...survey,
-        status: 'published'
-      });
+      await axios.post(`/api/surveys/${id}/publish`);
       toast.success('Survey published successfully!');
       fetchSurvey(); // Refresh survey data
     } catch (error) {
@@ -85,10 +82,7 @@ const PublishSurvey = () => {
   const unpublishSurvey = async () => {
     try {
       setPublishing(true);
-      await axios.put(`/api/surveys/${id}`, {
-        ...survey,
-        status: 'draft'
-      });
+      await axios.post(`/api/surveys/${id}/unpublish`);
       toast.success('Survey unpublished successfully!');
       fetchSurvey(); // Refresh survey data
     } catch (error) {

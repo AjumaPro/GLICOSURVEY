@@ -56,7 +56,7 @@ const DraftSurveys = () => {
 
   const handlePublish = async (id) => {
     try {
-      await axios.patch(`/api/surveys/${id}`, { status: 'published' });
+      await axios.post(`/api/surveys/${id}/publish`);
       toast.success('Survey published successfully!');
       fetchDraftSurveys();
     } catch (error) {

@@ -76,7 +76,7 @@ const PublishedSurveys = () => {
   const handleUnpublish = async (id) => {
     if (window.confirm('Are you sure you want to unpublish this survey? It will no longer be accessible to respondents.')) {
       try {
-        await axios.patch(`/api/surveys/${id}`, { status: 'draft' });
+        await axios.post(`/api/surveys/${id}/unpublish`);
         toast.success('Survey unpublished successfully');
         fetchPublishedSurveys();
       } catch (error) {
@@ -158,6 +158,20 @@ const PublishedSurveys = () => {
     }
   };
 
+  const handleQRCode = async (survey) => {
+    try {
+      const response = await axios.get(`/api/surveys/${survey.id}/share`);
+      setShareModal({
+        open: true,
+        survey: survey,
+        shareInfo: response.data
+      });
+    } catch (error) {
+      console.error('Error opening QR code:', error);
+      toast.error('Failed to open QR code');
+    }
+  };
+
   const handleQuickShare = async (survey) => {
     try {
       const response = await axios.get(`/api/surveys/${survey.id}/share`);
@@ -182,8 +196,21 @@ const PublishedSurveys = () => {
   const handleCopyShortUrl = async (survey) => {
     try {
       const response = await axios.get(`/api/surveys/${survey.id}/share`);
-      await navigator.clipboard.writeText(response.data.shortUrl);
-      toast.success('Short URL copied to clipboard!');
+      const shortUrl = response.data.shortUrl;
+      
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(shortUrl);
+        toast.success('Short URL copied to clipboard!');
+      } else {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = shortUrl;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        toast.success('Short URL copied to clipboard!');
+      }
     } catch (error) {
       console.error('Error copying short URL:', error);
       toast.error('Failed to copy short URL');
@@ -406,7 +433,7 @@ const PublishedSurveys = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex space-x-1">
                     <button
-                      onClick={() => handleShare(survey)}
+                      onClick={() => handleQRCode(survey)}
                       className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-md hover:bg-gray-100"
                       title="Share with QR Code"
                     >
@@ -538,7 +565,7 @@ const PublishedSurveys = () => {
                           <BarChart3 className="h-4 w-4" />
                         </Link>
                         <button
-                          onClick={() => handleShare(survey)}
+                          onClick={() => handleQRCode(survey)}
                           className="text-gray-400 hover:text-gray-600"
                           title="QR Code"
                         >

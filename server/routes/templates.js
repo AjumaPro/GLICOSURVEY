@@ -3,940 +3,121 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const { query } = require('../database/connection');
 
-// Predefined survey templates with professional emoji scales
-const surveyTemplates = {
-  customer_satisfaction: {
-    title: "Customer Satisfaction Survey",
-    description: "Measure customer satisfaction with your products or services",
-    questions: [
-      {
-        type: "emoji_scale",
-        text: "How satisfied are you with our overall service?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Unsatisfied", emoji: "😠" },
-          { value: 2, label: "Unsatisfied", emoji: "😞" },
-          { value: 3, label: "Neutral", emoji: "😐" },
-          { value: 4, label: "Satisfied", emoji: "🙂" },
-          { value: 5, label: "Very Satisfied", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How likely are you to recommend us to others?",
-        required: true,
-        options: [
-          { value: 1, label: "1", emoji: "😞" },
-          { value: 2, label: "2", emoji: "😞" },
-          { value: 3, label: "3", emoji: "😞" },
-          { value: 4, label: "4", emoji: "😞" },
-          { value: 5, label: "5", emoji: "😞" },
-          { value: 6, label: "6", emoji: "😞" },
-          { value: 7, label: "7", emoji: "😐" },
-          { value: 8, label: "8", emoji: "😐" },
-          { value: 9, label: "9", emoji: "😊" },
-          { value: 10, label: "10", emoji: "😊" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How easy was it to interact with us?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Difficult", emoji: "😠" },
-          { value: 2, label: "Difficult", emoji: "😞" },
-          { value: 3, label: "Moderate", emoji: "😐" },
-          { value: 4, label: "Easy", emoji: "🙂" },
-          { value: 5, label: "Very Easy", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the quality of our products?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Poor", emoji: "😠" },
-          { value: 2, label: "Poor", emoji: "😞" },
-          { value: 3, label: "Average", emoji: "😐" },
-          { value: 4, label: "Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How satisfied are you with our customer support?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Unsatisfied", emoji: "😠" },
-          { value: 2, label: "Unsatisfied", emoji: "😞" },
-          { value: 3, label: "Neutral", emoji: "😐" },
-          { value: 4, label: "Satisfied", emoji: "🙂" },
-          { value: 5, label: "Very Satisfied", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How likely are you to purchase from us again?",
-        required: true,
-        options: [
-          { value: 1, label: "1", emoji: "😞" },
-          { value: 2, label: "2", emoji: "😞" },
-          { value: 3, label: "3", emoji: "😞" },
-          { value: 4, label: "4", emoji: "😞" },
-          { value: 5, label: "5", emoji: "😞" },
-          { value: 6, label: "6", emoji: "😞" },
-          { value: 7, label: "7", emoji: "😐" },
-          { value: 8, label: "8", emoji: "😐" },
-          { value: 9, label: "9", emoji: "😊" },
-          { value: 10, label: "10", emoji: "😊" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate our pricing compared to competitors?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Expensive", emoji: "😠" },
-          { value: 2, label: "Expensive", emoji: "😞" },
-          { value: 3, label: "Fair", emoji: "😐" },
-          { value: 4, label: "Good Value", emoji: "🙂" },
-          { value: 5, label: "Excellent Value", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How satisfied are you with our delivery speed?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Unsatisfied", emoji: "😠" },
-          { value: 2, label: "Unsatisfied", emoji: "😞" },
-          { value: 3, label: "Neutral", emoji: "😐" },
-          { value: 4, label: "Satisfied", emoji: "🙂" },
-          { value: 5, label: "Very Satisfied", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "What aspect of our service impressed you the most?",
-        required: false,
-        options: [
-          { value: "quality", label: "Product Quality" },
-          { value: "service", label: "Customer Service" },
-          { value: "price", label: "Competitive Pricing" },
-          { value: "delivery", label: "Fast Delivery" },
-          { value: "website", label: "Website Experience" },
-          { value: "other", label: "Other" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "How did you first hear about our company?",
-        required: false,
-        options: [
-          { value: "social", label: "Social Media" },
-          { value: "search", label: "Search Engine" },
-          { value: "referral", label: "Friend/Family" },
-          { value: "advertising", label: "Advertisement" },
-          { value: "email", label: "Email Marketing" },
-          { value: "other", label: "Other" }
-        ]
-      },
-      {
-        type: "text",
-        text: "We would love to hear from you, please provide your comments. (Optional)",
-        required: false
+// Helper function to transform template data for frontend
+const transformTemplateForFrontend = (template) => {
+  try {
+    // Handle both string and object template_data
+    const templateData = typeof template.template_data === 'string' 
+      ? JSON.parse(template.template_data) 
+      : template.template_data;
+    
+    // Generate a frontend-friendly ID based on category or name
+    const generateFrontendId = (category, name) => {
+      if (category) {
+        return category.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
       }
-    ]
-  },
-  restaurant_feedback: {
-    title: "Restaurant Experience Survey",
-    description: "Gather feedback about dining experience, food quality, and service",
-    questions: [
-      {
-        type: "emoji_scale",
-        text: "How would you rate your overall dining experience?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "😠" },
-          { value: 2, label: "Fair", emoji: "😞" },
-          { value: 3, label: "Good", emoji: "😐" },
-          { value: 4, label: "Very Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the food quality?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "😠" },
-          { value: 2, label: "Fair", emoji: "😞" },
-          { value: 3, label: "Good", emoji: "😐" },
-          { value: 4, label: "Very Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the service quality?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "😠" },
-          { value: 2, label: "Fair", emoji: "😞" },
-          { value: 3, label: "Good", emoji: "😐" },
-          { value: 4, label: "Very Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the cleanliness of the restaurant?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "😠" },
-          { value: 2, label: "Fair", emoji: "😞" },
-          { value: 3, label: "Good", emoji: "😐" },
-          { value: 4, label: "Very Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the value for money?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor Value", emoji: "😠" },
-          { value: 2, label: "Fair Value", emoji: "😞" },
-          { value: 3, label: "Good Value", emoji: "😐" },
-          { value: 4, label: "Very Good Value", emoji: "🙂" },
-          { value: 5, label: "Excellent Value", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "What type of cuisine did you order?",
-        required: false,
-        options: [
-          { value: "local", label: "Local Cuisine" },
-          { value: "international", label: "International" },
-          { value: "fast_food", label: "Fast Food" },
-          { value: "fine_dining", label: "Fine Dining" },
-          { value: "casual", label: "Casual Dining" },
-          { value: "other", label: "Other" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "What was the main reason for your visit?",
-        required: false,
-        options: [
-          { value: "dinner", label: "Dinner" },
-          { value: "lunch", label: "Lunch" },
-          { value: "breakfast", label: "Breakfast" },
-          { value: "special_occasion", label: "Special Occasion" },
-          { value: "business", label: "Business Meeting" },
-          { value: "other", label: "Other" }
-        ]
-      },
-      {
-        type: "text",
-        text: "What dishes would you recommend to other customers?",
-        required: false
-      },
-      {
-        type: "text",
-        text: "How can we improve your dining experience?",
-        required: false
+      if (name) {
+        return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
       }
-    ]
-  },
-  hotel_experience: {
-    title: "Hotel Experience Survey",
-    description: "Collect feedback about hotel stay, amenities, and service quality",
-    questions: [
-      {
-        type: "emoji_scale",
-        text: "How would you rate your overall hotel experience?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "😠" },
-          { value: 2, label: "Fair", emoji: "😞" },
-          { value: 3, label: "Good", emoji: "😐" },
-          { value: 4, label: "Very Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the cleanliness of your room?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "😠" },
-          { value: 2, label: "Fair", emoji: "😞" },
-          { value: 3, label: "Good", emoji: "😐" },
-          { value: 4, label: "Very Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the staff friendliness?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "😠" },
-          { value: 2, label: "Fair", emoji: "😞" },
-          { value: 3, label: "Good", emoji: "😐" },
-          { value: 4, label: "Very Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the hotel amenities?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "😠" },
-          { value: 2, label: "Fair", emoji: "😞" },
-          { value: 3, label: "Good", emoji: "😐" },
-          { value: 4, label: "Very Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the check-in/check-out process?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "😠" },
-          { value: 2, label: "Fair", emoji: "😞" },
-          { value: 3, label: "Good", emoji: "😐" },
-          { value: 4, label: "Very Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "What type of room did you stay in?",
-        required: false,
-        options: [
-          { value: "standard", label: "Standard Room" },
-          { value: "deluxe", label: "Deluxe Room" },
-          { value: "suite", label: "Suite" },
-          { value: "family", label: "Family Room" },
-          { value: "business", label: "Business Room" },
-          { value: "other", label: "Other" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "What was the main purpose of your stay?",
-        required: false,
-        options: [
-          { value: "leisure", label: "Leisure/Vacation" },
-          { value: "business", label: "Business Trip" },
-          { value: "family", label: "Family Visit" },
-          { value: "event", label: "Special Event" },
-          { value: "other", label: "Other" }
-        ]
-      },
-      {
-        type: "text",
-        text: "What amenities did you use during your stay?",
-        required: false
-      },
-      {
-        type: "text",
-        text: "How can we improve your hotel experience?",
-        required: false
+      return `template_${template.id}`;
+    };
+    
+    const frontendId = generateFrontendId(templateData.category || template.category, templateData.title || template.name);
+    
+    // Transform questions to match frontend expectations
+    const transformQuestions = (questions) => {
+      if (!Array.isArray(questions)) return [];
+      
+      return questions.map((q, index) => ({
+        id: index + 1,
+        text: q.title || q.text || '',
+        type: q.type || 'text',
+        required: q.required || false,
+        options: q.options || [],
+        order_index: index + 1,
+        settings: q.settings || {}
+      }));
+    };
+    
+    return {
+      id: frontendId, // Use frontend-friendly ID
+      databaseId: template.id, // Keep original database ID
+      title: templateData.title || template.name,
+      description: templateData.description || template.description,
+      questions: transformQuestions(templateData.questions || []),
+      category: templateData.category || template.category,
+      is_public: template.is_public,
+      type: template.type || 'system',
+      created_at: template.created_at,
+      updated_at: template.updated_at
+    };
+  } catch (error) {
+    console.error('Error parsing template data:', error);
+    
+    const generateFrontendId = (category, name) => {
+      if (category) {
+        return category.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
       }
-    ]
-  },
-  ecommerce_feedback: {
-    title: "E-commerce Experience Survey",
-    description: "Gather feedback about online shopping experience and website usability",
-    questions: [
-      {
-        type: "emoji_scale",
-        text: "How would you rate your overall shopping experience?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "😠" },
-          { value: 2, label: "Fair", emoji: "😞" },
-          { value: 3, label: "Good", emoji: "😐" },
-          { value: 4, label: "Very Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How easy was it to find the products you were looking for?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Difficult", emoji: "😠" },
-          { value: 2, label: "Difficult", emoji: "😞" },
-          { value: 3, label: "Moderate", emoji: "😐" },
-          { value: 4, label: "Easy", emoji: "🙂" },
-          { value: 5, label: "Very Easy", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the checkout process?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "😠" },
-          { value: 2, label: "Fair", emoji: "😞" },
-          { value: 3, label: "Good", emoji: "😐" },
-          { value: 4, label: "Very Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How satisfied are you with the product quality?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Unsatisfied", emoji: "😠" },
-          { value: 2, label: "Unsatisfied", emoji: "😞" },
-          { value: 3, label: "Neutral", emoji: "😐" },
-          { value: 4, label: "Satisfied", emoji: "🙂" },
-          { value: 5, label: "Very Satisfied", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the delivery speed?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Slow", emoji: "😠" },
-          { value: 2, label: "Slow", emoji: "😞" },
-          { value: 3, label: "Moderate", emoji: "😐" },
-          { value: 4, label: "Fast", emoji: "🙂" },
-          { value: 5, label: "Very Fast", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "What type of products did you purchase?",
-        required: false,
-        options: [
-          { value: "electronics", label: "Electronics" },
-          { value: "clothing", label: "Clothing & Fashion" },
-          { value: "home", label: "Home & Garden" },
-          { value: "books", label: "Books & Media" },
-          { value: "sports", label: "Sports & Outdoor" },
-          { value: "other", label: "Other" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "How did you discover our website?",
-        required: false,
-        options: [
-          { value: "search", label: "Search Engine" },
-          { value: "social", label: "Social Media" },
-          { value: "advertisement", label: "Advertisement" },
-          { value: "email", label: "Email Marketing" },
-          { value: "referral", label: "Friend/Family" },
-          { value: "other", label: "Other" }
-        ]
-      },
-      {
-        type: "text",
-        text: "What features would you like to see added to our website?",
-        required: false
-      },
-      {
-        type: "text",
-        text: "How can we improve your shopping experience?",
-        required: false
+      if (name) {
+        return name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
       }
-    ]
-  },
-  customer_support: {
-    title: "Customer Support Experience Survey",
-    description: "Evaluate customer support quality, response time, and resolution effectiveness",
-    questions: [
-      {
-        type: "emoji_scale",
-        text: "How satisfied are you with our customer support?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Unsatisfied", emoji: "😠" },
-          { value: 2, label: "Unsatisfied", emoji: "😞" },
-          { value: 3, label: "Neutral", emoji: "😐" },
-          { value: 4, label: "Satisfied", emoji: "🙂" },
-          { value: 5, label: "Very Satisfied", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How quickly was your issue resolved?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Slow", emoji: "😠" },
-          { value: 2, label: "Slow", emoji: "😞" },
-          { value: 3, label: "Moderate", emoji: "😐" },
-          { value: 4, label: "Fast", emoji: "🙂" },
-          { value: 5, label: "Very Fast", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How knowledgeable was the support representative?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "😠" },
-          { value: 2, label: "Fair", emoji: "😞" },
-          { value: 3, label: "Good", emoji: "😐" },
-          { value: 4, label: "Very Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How professional was the support representative?",
-        required: true,
-        options: [
-          { value: 1, label: "Unprofessional", emoji: "😠" },
-          { value: 2, label: "Somewhat Professional", emoji: "😞" },
-          { value: 3, label: "Professional", emoji: "😐" },
-          { value: 4, label: "Very Professional", emoji: "🙂" },
-          { value: 5, label: "Extremely Professional", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "What was the nature of your support request?",
-        required: false,
-        options: [
-          { value: "technical", label: "Technical Issue" },
-          { value: "billing", label: "Billing/Payment" },
-          { value: "product", label: "Product Information" },
-          { value: "refund", label: "Refund/Return" },
-          { value: "account", label: "Account Issue" },
-          { value: "other", label: "Other" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "How did you contact our support team?",
-        required: false,
-        options: [
-          { value: "phone", label: "Phone Call" },
-          { value: "email", label: "Email" },
-          { value: "chat", label: "Live Chat" },
-          { value: "ticket", label: "Support Ticket" },
-          { value: "social", label: "Social Media" },
-          { value: "other", label: "Other" }
-        ]
-      },
-      {
-        type: "text",
-        text: "What was your support issue?",
-        required: false
-      },
-      {
-        type: "text",
-        text: "How can we improve our customer support?",
-        required: false
-      }
-    ]
-  },
-  employee_feedback: {
-    title: "Employee Feedback Survey",
-    description: "Gather feedback from your team members",
-    questions: [
-      {
-        type: "emoji_scale",
-        text: "How satisfied are you with your current role?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Unsatisfied", emoji: "😠" },
-          { value: 2, label: "Unsatisfied", emoji: "😞" },
-          { value: 3, label: "Neutral", emoji: "😐" },
-          { value: 4, label: "Satisfied", emoji: "🙂" },
-          { value: 5, label: "Very Satisfied", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the work-life balance?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "⭐" },
-          { value: 2, label: "Fair", emoji: "⭐⭐" },
-          { value: 3, label: "Good", emoji: "⭐⭐⭐" },
-          { value: 4, label: "Very Good", emoji: "⭐⭐⭐⭐" },
-          { value: 5, label: "Excellent", emoji: "⭐⭐⭐⭐⭐" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "What would you like to see improved?",
-        required: false,
-        options: [
-          { value: "communication", label: "Communication" },
-          { value: "training", label: "Training & Development" },
-          { value: "benefits", label: "Benefits & Compensation" },
-          { value: "culture", label: "Company Culture" },
-          { value: "tools", label: "Tools & Resources" }
-        ]
-      },
-      {
-        type: "text",
-        text: "Any additional suggestions for improvement?",
-        required: false
-      }
-    ]
-  },
-  product_feedback: {
-    title: "Product Feedback Survey",
-    description: "Collect feedback about your products or services",
-    questions: [
-      {
-        type: "emoji_scale",
-        text: "How would you rate the overall quality of our product?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "⭐" },
-          { value: 2, label: "Fair", emoji: "⭐⭐" },
-          { value: 3, label: "Good", emoji: "⭐⭐⭐" },
-          { value: 4, label: "Very Good", emoji: "⭐⭐⭐⭐" },
-          { value: 5, label: "Excellent", emoji: "⭐⭐⭐⭐⭐" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How easy was it to use our product?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Difficult", emoji: "😠" },
-          { value: 2, label: "Difficult", emoji: "😞" },
-          { value: 3, label: "Moderate", emoji: "😐" },
-          { value: 4, label: "Easy", emoji: "🙂" },
-          { value: 5, label: "Very Easy", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "What features do you use most often?",
-        required: false,
-        options: [
-          { value: "core", label: "Core Features" },
-          { value: "advanced", label: "Advanced Features" },
-          { value: "mobile", label: "Mobile App" },
-          { value: "web", label: "Web Interface" },
-          { value: "api", label: "API Integration" }
-        ]
-      },
-      {
-        type: "text",
-        text: "What features would you like to see added?",
-        required: false
-      }
-    ]
-  },
-  event_feedback: {
-    title: "Event Feedback Survey",
-    description: "Gather feedback from event attendees",
-    questions: [
-      {
-        type: "emoji_scale",
-        text: "How would you rate the overall event experience?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "⭐" },
-          { value: 2, label: "Fair", emoji: "⭐⭐" },
-          { value: 3, label: "Good", emoji: "⭐⭐⭐" },
-          { value: 4, label: "Very Good", emoji: "⭐⭐⭐⭐" },
-          { value: 5, label: "Excellent", emoji: "⭐⭐⭐⭐⭐" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How likely are you to attend future events?",
-        required: true,
-        options: [
-          { value: 1, label: "Not likely", emoji: "👎" },
-          { value: 2, label: "Somewhat likely", emoji: "👍" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "What was your favorite part of the event?",
-        required: false,
-        options: [
-          { value: "keynotes", label: "Keynote Speakers" },
-          { value: "networking", label: "Networking Sessions" },
-          { value: "workshops", label: "Workshops" },
-          { value: "exhibits", label: "Exhibits" },
-          { value: "food", label: "Food & Refreshments" }
-        ]
-      },
-      {
-        type: "text",
-        text: "What would you like to see at future events?",
-        required: false
-      }
-    ]
-  },
-  website_feedback: {
-    title: "Website Feedback Survey",
-    description: "Get feedback about your website user experience",
-    questions: [
-      {
-        type: "emoji_scale",
-        text: "How would you rate the overall website experience?",
-        required: true,
-        options: [
-          { value: 1, label: "Poor", emoji: "😞" },
-          { value: 2, label: "Fair", emoji: "😕" },
-          { value: 3, label: "Good", emoji: "😐" },
-          { value: 4, label: "Very Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "😄" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How easy was it to find what you were looking for?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Difficult", emoji: "😠" },
-          { value: 2, label: "Difficult", emoji: "😞" },
-          { value: 3, label: "Moderate", emoji: "😐" },
-          { value: 4, label: "Easy", emoji: "🙂" },
-          { value: 5, label: "Very Easy", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "What was the main reason for your visit?",
-        required: false,
-        options: [
-          { value: "information", label: "Find Information" },
-          { value: "purchase", label: "Make a Purchase" },
-          { value: "support", label: "Get Support" },
-          { value: "research", label: "Research Products" },
-          { value: "other", label: "Other" }
-        ]
-      },
-      {
-        type: "text",
-        text: "What improvements would make our website better?",
-        required: false
-      }
-    ]
-  },
-  banking_feedback: {
-    title: "Banking Experience Survey",
-    description: "Gather feedback about your banking experience and services",
-    questions: [
-      {
-        type: "emoji_scale",
-        text: "How satisfied are you with the experience you received at Platinum Banking?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Unsatisfied", emoji: "😠" },
-          { value: 2, label: "Unsatisfied", emoji: "😞" },
-          { value: 3, label: "Neutral", emoji: "😐" },
-          { value: 4, label: "Satisfied", emoji: "🙂" },
-          { value: 5, label: "Very Satisfied", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "Based on your experience at Platinum Banking, how likely are you to recommend us to your friends and colleagues?",
-        required: true,
-        options: [
-          { value: 1, label: "1", emoji: "😞" },
-          { value: 2, label: "2", emoji: "😞" },
-          { value: 3, label: "3", emoji: "😞" },
-          { value: 4, label: "4", emoji: "😞" },
-          { value: 5, label: "5", emoji: "😞" },
-          { value: 6, label: "6", emoji: "😞" },
-          { value: 7, label: "7", emoji: "😐" },
-          { value: 8, label: "8", emoji: "😐" },
-          { value: 9, label: "9", emoji: "😊" },
-          { value: 10, label: "10", emoji: "😊" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How easy was it to interact with us?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Difficult", emoji: "😠" },
-          { value: 2, label: "Difficult", emoji: "😞" },
-          { value: 3, label: "Moderate", emoji: "😐" },
-          { value: 4, label: "Easy", emoji: "🙂" },
-          { value: 5, label: "Very Easy", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the quality of our customer service?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Poor", emoji: "😠" },
-          { value: 2, label: "Poor", emoji: "😞" },
-          { value: 3, label: "Average", emoji: "😐" },
-          { value: 4, label: "Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How satisfied are you with our banking products and services?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Unsatisfied", emoji: "😠" },
-          { value: 2, label: "Unsatisfied", emoji: "😞" },
-          { value: 3, label: "Neutral", emoji: "😐" },
-          { value: 4, label: "Satisfied", emoji: "🙂" },
-          { value: 5, label: "Very Satisfied", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How likely are you to use our services again in the future?",
-        required: true,
-        options: [
-          { value: 1, label: "1", emoji: "😞" },
-          { value: 2, label: "2", emoji: "😞" },
-          { value: 3, label: "3", emoji: "😞" },
-          { value: 4, label: "4", emoji: "😞" },
-          { value: 5, label: "5", emoji: "😞" },
-          { value: 6, label: "6", emoji: "😞" },
-          { value: 7, label: "7", emoji: "😐" },
-          { value: 8, label: "8", emoji: "😐" },
-          { value: 9, label: "9", emoji: "😊" },
-          { value: 10, label: "10", emoji: "😊" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the speed of our transaction processing?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Slow", emoji: "😠" },
-          { value: 2, label: "Slow", emoji: "😞" },
-          { value: 3, label: "Moderate", emoji: "😐" },
-          { value: 4, label: "Fast", emoji: "🙂" },
-          { value: 5, label: "Very Fast", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How satisfied are you with our online banking platform?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Unsatisfied", emoji: "😠" },
-          { value: 2, label: "Unsatisfied", emoji: "😞" },
-          { value: 3, label: "Neutral", emoji: "😐" },
-          { value: 4, label: "Satisfied", emoji: "🙂" },
-          { value: 5, label: "Very Satisfied", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How would you rate the security of our banking services?",
-        required: true,
-        options: [
-          { value: 1, label: "Very Poor", emoji: "😠" },
-          { value: 2, label: "Poor", emoji: "😞" },
-          { value: 3, label: "Average", emoji: "😐" },
-          { value: 4, label: "Good", emoji: "🙂" },
-          { value: 5, label: "Excellent", emoji: "🥰" }
-        ]
-      },
-      {
-        type: "emoji_scale",
-        text: "How likely are you to recommend our mobile banking app?",
-        required: true,
-        options: [
-          { value: 1, label: "1", emoji: "😞" },
-          { value: 2, label: "2", emoji: "😞" },
-          { value: 3, label: "3", emoji: "😞" },
-          { value: 4, label: "4", emoji: "😞" },
-          { value: 5, label: "5", emoji: "😞" },
-          { value: 6, label: "6", emoji: "😞" },
-          { value: 7, label: "7", emoji: "😐" },
-          { value: 8, label: "8", emoji: "😐" },
-          { value: 9, label: "9", emoji: "😊" },
-          { value: 10, label: "10", emoji: "😊" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "Which banking service do you use most frequently?",
-        required: false,
-        options: [
-          { value: "savings", label: "Savings Account" },
-          { value: "checking", label: "Checking Account" },
-          { value: "loans", label: "Personal Loans" },
-          { value: "credit", label: "Credit Cards" },
-          { value: "investment", label: "Investment Services" },
-          { value: "other", label: "Other Services" }
-        ]
-      },
-      {
-        type: "multiple_choice",
-        text: "How did you first learn about our banking services?",
-        required: false,
-        options: [
-          { value: "referral", label: "Friend/Family Referral" },
-          { value: "advertising", label: "Advertising/Marketing" },
-          { value: "online", label: "Online Search" },
-          { value: "branch", label: "Branch Visit" },
-          { value: "social", label: "Social Media" },
-          { value: "other", label: "Other" }
-        ]
-      },
-      {
-        type: "text",
-        text: "We would love to hear from you, please provide your comments. (Optional)",
-        required: false
-      },
-      {
-        type: "phone",
-        text: "Please provide your phone number for follow-up (Optional)",
-        required: false,
-        options: [
-          { value: "country_code", label: "Country Code", default: "+233" },
-          { value: "phone_number", label: "Phone Number" }
-        ]
-      }
-    ]
+      return `template_${template.id}`;
+    };
+    
+    const frontendId = generateFrontendId(template.category, template.name);
+    
+    return {
+      id: frontendId, // Use frontend-friendly ID
+      databaseId: template.id, // Keep original database ID
+      title: template.name,
+      description: template.description,
+      questions: [],
+      category: template.category,
+      is_public: template.is_public,
+      type: template.type || 'system',
+      created_at: template.created_at,
+      updated_at: template.updated_at
+    };
   }
 };
 
 // POST /api/templates - Create a new template
 router.post('/', auth, async (req, res) => {
   try {
-    const { title, description, questions } = req.body;
+    const { title, description, questions, category, is_public = false } = req.body;
     
-    if (!title || !questions || !Array.isArray(questions)) {
-      return res.status(400).json({ error: 'Title and questions array are required' });
+    if (!title) {
+      return res.status(400).json({ error: 'Template title is required' });
     }
     
-    // Generate a unique template ID
-    const templateId = `custom_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
-    // Add the new template to the templates object
-    surveyTemplates[templateId] = {
-      id: templateId,
-      title,
-      description,
-      questions: questions.map((q, index) => ({
-        ...q,
-        id: index + 1
-      }))
+    // Create template_data structure
+    const template_data = {
+      title: title,
+      description: description || '',
+      category: category || 'Custom',
+      questions: questions || []
     };
+    
+    // Insert template into database
+    const result = await query(
+      `INSERT INTO custom_templates (name, description, category, template_data, is_public, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [
+        title,
+        description || '',
+        category || 'Custom',
+        JSON.stringify(template_data),
+        is_public,
+        req.user.id
+      ]
+    );
+    
+    const transformedTemplate = transformTemplateForFrontend({ ...result.rows[0], type: 'custom' });
     
     res.status(201).json({
       message: 'Template created successfully',
-      template: surveyTemplates[templateId]
+      template: transformedTemplate
     });
     
   } catch (error) {
@@ -948,10 +129,28 @@ router.post('/', auth, async (req, res) => {
 // GET /api/templates - Get all available templates
 router.get('/', auth, async (req, res) => {
   try {
-    const templates = Object.keys(surveyTemplates).map(key => ({
-      id: key,
-      ...surveyTemplates[key]
-    }));
+    // Get system templates (not deleted)
+    const systemTemplatesResult = await query(
+      `SELECT id, name, description, category, template_data, is_public, created_at, updated_at
+       FROM survey_templates 
+       WHERE is_deleted = false
+       ORDER BY name ASC`
+    );
+
+    // Get custom templates (not deleted, created by user or public)
+    const customTemplatesResult = await query(
+      `SELECT id, name, description, category, template_data, is_public, created_by, created_at, updated_at
+       FROM custom_templates 
+       WHERE is_deleted = false AND (created_by = $1 OR is_public = true)
+       ORDER BY name ASC`,
+      [req.user.id]
+    );
+
+    // Transform templates for frontend
+    const systemTemplates = systemTemplatesResult.rows.map(t => transformTemplateForFrontend({ ...t, type: 'system' }));
+    const customTemplates = customTemplatesResult.rows.map(t => transformTemplateForFrontend({ ...t, type: 'custom' }));
+
+    const templates = [...systemTemplates, ...customTemplates];
     
     res.json(templates);
   } catch (error) {
@@ -960,19 +159,75 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// GET /api/templates/system - Get only system templates
+router.get('/system', auth, async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT id, name, description, category, template_data, is_public, created_at, updated_at
+       FROM survey_templates 
+       WHERE is_deleted = false
+       ORDER BY name ASC`
+    );
+    
+    const templates = result.rows.map(t => transformTemplateForFrontend({ ...t, type: 'system' }));
+    res.json(templates);
+  } catch (error) {
+    console.error('Error fetching system templates:', error);
+    res.status(500).json({ error: 'Failed to fetch system templates' });
+  }
+});
+
+// GET /api/templates/custom - Get only custom templates
+router.get('/custom', auth, async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT id, name, description, category, template_data, is_public, created_by, created_at, updated_at
+       FROM custom_templates 
+       WHERE is_deleted = false AND (created_by = $1 OR is_public = true)
+       ORDER BY name ASC`,
+      [req.user.id]
+    );
+    
+    const templates = result.rows.map(t => transformTemplateForFrontend({ ...t, type: 'custom' }));
+    res.json(templates);
+  } catch (error) {
+    console.error('Error fetching custom templates:', error);
+    res.status(500).json({ error: 'Failed to fetch custom templates' });
+  }
+});
+
 // GET /api/templates/:id - Get a specific template
 router.get('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
     
-    if (!surveyTemplates[id]) {
-      return res.status(404).json({ error: 'Template not found' });
+    // Try to find in system templates first
+    let result = await query(
+      `SELECT id, name, description, category, template_data, is_public, created_at, updated_at
+       FROM survey_templates 
+       WHERE id = $1 AND is_deleted = false`,
+      [id]
+    );
+
+    if (result.rows.length > 0) {
+      const template = transformTemplateForFrontend({ ...result.rows[0], type: 'system' });
+      return res.json(template);
+    }
+
+    // Try to find in custom templates
+    result = await query(
+      `SELECT id, name, description, category, template_data, is_public, created_by, created_at, updated_at
+       FROM custom_templates 
+       WHERE id = $1 AND is_deleted = false AND (created_by = $2 OR is_public = true)`,
+      [id, req.user.id]
+    );
+
+    if (result.rows.length > 0) {
+      const template = transformTemplateForFrontend({ ...result.rows[0], type: 'custom' });
+      return res.json(template);
     }
     
-    res.json({
-      id,
-      ...surveyTemplates[id]
-    });
+    res.status(404).json({ error: 'Template not found' });
   } catch (error) {
     console.error('Error fetching template:', error);
     res.status(500).json({ error: 'Failed to fetch template' });
@@ -985,11 +240,76 @@ router.post('/:id/create', auth, async (req, res) => {
     const { id } = req.params;
     const { title, description } = req.body;
     
-    if (!surveyTemplates[id]) {
+    let template = null;
+    let templateType = 'system';
+
+    // Check if ID is numeric (database ID) or string (frontend ID)
+    if (!isNaN(id) && !id.includes('_')) {
+      // Numeric ID - try database lookup first
+      // Try system templates first
+      let templateResult = await query(
+        `SELECT * FROM survey_templates WHERE id = $1 AND is_deleted = false`,
+        [parseInt(id)]
+      );
+
+      if (templateResult.rows.length > 0) {
+        template = templateResult.rows[0];
+      } else {
+        // Try custom templates
+        templateResult = await query(
+          `SELECT * FROM custom_templates WHERE id = $1 AND is_deleted = false AND (created_by = $2 OR is_public = true)`,
+          [parseInt(id), req.user.id]
+        );
+        
+        if (templateResult.rows.length > 0) {
+          template = templateResult.rows[0];
+          templateType = 'custom';
+        }
+      }
+    } else {
+      // String ID - search by frontend ID (category-based)
+      // Convert frontend ID to search term (e.g. "customer_feedback" -> "customer feedback")
+      const searchTerm = id.replace(/_/g, ' ');
+      
+      // Search in system templates by category
+      let templateResult = await query(
+        `SELECT * FROM survey_templates WHERE category ILIKE $1 AND is_deleted = false`,
+        [`%${searchTerm}%`]
+      );
+      
+      if (templateResult.rows.length > 0) {
+        template = templateResult.rows[0];
+      } else {
+        // Search in custom templates by category
+        templateResult = await query(
+          `SELECT * FROM custom_templates WHERE category ILIKE $1 AND is_deleted = false AND (created_by = $2 OR is_public = true)`,
+          [`%${searchTerm}%`, req.user.id]
+        );
+        
+        if (templateResult.rows.length > 0) {
+          template = templateResult.rows[0];
+          templateType = 'custom';
+        }
+      }
+    }
+
+    if (!template) {
       return res.status(404).json({ error: 'Template not found' });
     }
     
-    const template = surveyTemplates[id];
+    // Parse template data
+    let templateData;
+    try {
+      templateData = typeof template.template_data === 'string' 
+        ? JSON.parse(template.template_data) 
+        : template.template_data;
+    } catch (error) {
+      console.error('Error parsing template data:', error);
+      return res.status(500).json({ error: 'Invalid template data' });
+    }
+    
+    // Start a transaction
+    await query('BEGIN');
     
     // Create the survey
     const surveyResult = await query(
@@ -998,77 +318,18 @@ router.post('/:id/create', auth, async (req, res) => {
        RETURNING id`,
       [
         req.user.id,
-        title || template.title,
-        description || template.description,
+        title || templateData.title || template.name,
+        description || templateData.description || template.description,
         'draft',
-        JSON.stringify({ primaryColor: '#3B82F6', secondaryColor: '#1E40AF' }),
-        JSON.stringify({ allowAnonymous: true, showProgress: true })
+        JSON.stringify(templateData.theme || { primaryColor: '#3B82F6', secondaryColor: '#1E40AF' }),
+        JSON.stringify(templateData.settings || { allowAnonymous: true, showProgress: true })
       ]
     );
     
     const surveyId = surveyResult.rows[0].id;
     
     // Create questions from template
-    for (let i = 0; i < template.questions.length; i++) {
-      const question = template.questions[i];
-      await query(
-        `INSERT INTO questions (survey_id, title, type, required, options, order_index)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [
-          surveyId,
-          question.text,
-          question.type,
-          question.required,
-          JSON.stringify(question.options || []),
-          i + 1
-        ]
-      );
-    }
-    
-    res.json({
-      message: 'Survey created from template successfully',
-      surveyId,
-      survey: {
-        id: surveyId,
-        title: title || template.title,
-        description: description || template.description
-      }
-    });
-    
-  } catch (error) {
-    console.error('Error creating survey from template:', error);
-    res.status(500).json({ error: 'Failed to create survey from template' });
-  }
-});
-
-// POST /api/templates/:id/customize - Save customized template
-router.post('/:id/customize', auth, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { title, description, questions } = req.body;
-    
-    if (!surveyTemplates[id]) {
-      return res.status(404).json({ error: 'Template not found' });
-    }
-    
-    // Create a new survey with the customized template
-    const surveyResult = await query(
-      `INSERT INTO surveys (user_id, title, description, status, theme, settings)
-       VALUES ($1, $2, $3, $4, $5, $6)
-       RETURNING id`,
-      [
-        req.user.id,
-        title,
-        description,
-        'draft',
-        JSON.stringify({ primaryColor: '#3B82F6', secondaryColor: '#1E40AF' }),
-        JSON.stringify({ allowAnonymous: true, showProgress: true })
-      ]
-    );
-    
-    const surveyId = surveyResult.rows[0].id;
-    
-    // Create questions from customized template
+    const questions = templateData.questions || [];
     for (let i = 0; i < questions.length; i++) {
       const question = questions[i];
       await query(
@@ -1078,55 +339,232 @@ router.post('/:id/customize', auth, async (req, res) => {
           surveyId,
           question.text || question.title,
           question.type,
-          question.required,
+          question.required || false,
           JSON.stringify(question.options || []),
           i + 1,
-          JSON.stringify({
-            commentsPlaceholder: question.commentsPlaceholder,
-            phonePlaceholder: question.phonePlaceholder,
-            countryCode: question.countryCode
-          })
+          JSON.stringify(question.settings || {})
         ]
       );
     }
+
+    // Create initial version
+    await query(
+      `INSERT INTO survey_versions (survey_id, version_number, title, description, theme, settings, questions_data, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        surveyId,
+        1,
+        title || templateData.title || template.name,
+        description || templateData.description || template.description,
+        JSON.stringify(templateData.theme || {}),
+        JSON.stringify(templateData.settings || {}),
+        JSON.stringify(questions),
+        req.user.id
+      ]
+    );
+
+    await query('COMMIT');
     
-    res.json({
-      message: 'Customized template saved successfully',
-      surveyId,
+    res.status(201).json({
+      message: 'Survey created successfully from template',
+      surveyId: surveyId,
       survey: {
         id: surveyId,
-        title,
-        description
+        title: title || templateData.title || template.name,
+        description: description || templateData.description || template.description,
+        status: 'draft'
       }
     });
-    
   } catch (error) {
-    console.error('Error saving customized template:', error);
-    res.status(500).json({ error: 'Failed to save customized template' });
+    await query('ROLLBACK');
+    console.error('Error creating survey from template:', error);
+    res.status(500).json({ error: 'Failed to create survey from template' });
   }
 });
 
-// PUT /api/templates/:id - Update a template
-router.put('/:id', auth, async (req, res) => {
+// POST /api/templates/:id/customize - Create a survey from customized template
+router.post('/:id/customize', auth, async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, questions } = req.body;
     
-    if (!surveyTemplates[id]) {
+    let template = null;
+    let templateType = 'system';
+
+    // Check if ID is numeric (database ID) or string (frontend ID)
+    if (!isNaN(id) && !id.includes('_')) {
+      // Numeric ID - try database lookup first
+      // Try system templates first
+      let templateResult = await query(
+        `SELECT * FROM survey_templates WHERE id = $1 AND is_deleted = false`,
+        [parseInt(id)]
+      );
+
+      if (templateResult.rows.length > 0) {
+        template = templateResult.rows[0];
+      } else {
+        // Try custom templates
+        templateResult = await query(
+          `SELECT * FROM custom_templates WHERE id = $1 AND is_deleted = false AND (created_by = $2 OR is_public = true)`,
+          [parseInt(id), req.user.id]
+        );
+        
+        if (templateResult.rows.length > 0) {
+          template = templateResult.rows[0];
+          templateType = 'custom';
+        }
+      }
+    } else {
+      // String ID - search by frontend ID (category-based)
+      // Convert frontend ID to search term (e.g. "customer_feedback" -> "customer feedback")
+      const searchTerm = id.replace(/_/g, ' ');
+      
+      // Search in system templates by category
+      let templateResult = await query(
+        `SELECT * FROM survey_templates WHERE category ILIKE $1 AND is_deleted = false`,
+        [`%${searchTerm}%`]
+      );
+      
+      if (templateResult.rows.length > 0) {
+        template = templateResult.rows[0];
+      } else {
+        // Search in custom templates by category
+        templateResult = await query(
+          `SELECT * FROM custom_templates WHERE category ILIKE $1 AND is_deleted = false AND (created_by = $2 OR is_public = true)`,
+          [`%${searchTerm}%`, req.user.id]
+        );
+        
+        if (templateResult.rows.length > 0) {
+          template = templateResult.rows[0];
+          templateType = 'custom';
+        }
+      }
+    }
+
+    if (!template) {
       return res.status(404).json({ error: 'Template not found' });
     }
     
-    // Update template (in a real app, you'd store templates in database)
-    surveyTemplates[id] = {
-      ...surveyTemplates[id],
-      title: title || surveyTemplates[id].title,
-      description: description || surveyTemplates[id].description,
-      questions: questions || surveyTemplates[id].questions
-    };
+    // Start a transaction
+    await query('BEGIN');
+    
+    // Create the survey from customized data
+    const surveyResult = await query(
+      `INSERT INTO surveys (user_id, title, description, status, theme, settings)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING id`,
+      [
+        req.user.id,
+        title || template.name,
+        description || template.description,
+        'draft',
+        JSON.stringify({ primaryColor: '#3B82F6', secondaryColor: '#1E40AF' }),
+        JSON.stringify({ allowAnonymous: true, showProgress: true })
+      ]
+    );
+    
+    const surveyId = surveyResult.rows[0].id;
+    
+    // Create questions from customized questions
+    const questionsToCreate = questions || [];
+    for (let i = 0; i < questionsToCreate.length; i++) {
+      const question = questionsToCreate[i];
+      await query(
+        `INSERT INTO questions (survey_id, title, type, required, options, order_index, settings)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [
+          surveyId,
+          question.text || question.title,
+          question.type,
+          question.required || false,
+          JSON.stringify(question.options || []),
+          i + 1,
+          JSON.stringify(question.settings || {})
+        ]
+      );
+    }
+
+    // Create initial version
+    await query(
+      `INSERT INTO survey_versions (survey_id, version_number, title, description, theme, settings, questions_data, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        surveyId,
+        1,
+        title || template.name,
+        description || template.description,
+        JSON.stringify({ primaryColor: '#3B82F6', secondaryColor: '#1E40AF' }),
+        JSON.stringify({ allowAnonymous: true, showProgress: true }),
+        JSON.stringify(questionsToCreate),
+        req.user.id
+      ]
+    );
+
+    await query('COMMIT');
+    
+    res.status(201).json({
+      message: 'Survey created successfully from customized template',
+      surveyId: surveyId,
+      survey: {
+        id: surveyId,
+        title: title || template.name,
+        description: description || template.description,
+        status: 'draft'
+      }
+    });
+  } catch (error) {
+    await query('ROLLBACK');
+    console.error('Error creating survey from customized template:', error);
+    res.status(500).json({ error: 'Failed to create survey from customized template' });
+  }
+});
+
+// PUT /api/templates/:id - Update a custom template
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, category, questions } = req.body;
+
+    // Validate required fields
+    if (!title || title.trim() === '') {
+      return res.status(400).json({ error: 'Template name is required' });
+    }
+
+    // Check if template exists and belongs to user
+    const templateCheck = await query(
+      'SELECT id FROM custom_templates WHERE id = $1 AND created_by = $2 AND is_deleted = false',
+      [id, req.user.id]
+    );
+
+    if (templateCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Template not found' });
+    }
+
+    // Update template
+    const result = await query(
+      `UPDATE custom_templates 
+       SET name = $1, description = $2, category = $3, template_data = $4, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $5
+       RETURNING *`,
+      [
+        title.trim(),
+        description || '',
+        category || 'Custom',
+        JSON.stringify({
+          title: title.trim(),
+          description: description || '',
+          category: category || 'Custom',
+          questions: questions || []
+        }),
+        id
+      ]
+    );
+
+    const transformedTemplate = transformTemplateForFrontend({ ...result.rows[0], type: 'custom' });
     
     res.json({
       message: 'Template updated successfully',
-      template: { id, ...surveyTemplates[id] }
+      template: transformedTemplate
     });
   } catch (error) {
     console.error('Error updating template:', error);
@@ -1138,25 +576,85 @@ router.put('/:id', auth, async (req, res) => {
 router.post('/:id/duplicate', auth, async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description } = req.body;
+    const { name, description } = req.body;
     
-    if (!surveyTemplates[id]) {
+    let template = null;
+    let templateType = 'system';
+
+    // Check if ID is numeric (database ID) or string (frontend ID)
+    if (!isNaN(id) && !id.includes('_')) {
+      // Numeric ID - try database lookup first
+      // Try system templates first
+      let templateResult = await query(
+        `SELECT * FROM survey_templates WHERE id = $1 AND is_deleted = false`,
+        [parseInt(id)]
+      );
+
+      if (templateResult.rows.length > 0) {
+        template = templateResult.rows[0];
+      } else {
+        // Try custom templates
+        templateResult = await query(
+          `SELECT * FROM custom_templates WHERE id = $1 AND is_deleted = false AND (created_by = $2 OR is_public = true)`,
+          [parseInt(id), req.user.id]
+        );
+        
+        if (templateResult.rows.length > 0) {
+          template = templateResult.rows[0];
+          templateType = 'custom';
+        }
+      }
+    } else {
+      // String ID - search by frontend ID (category-based)
+      // Convert frontend ID to search term (e.g. "customer_feedback" -> "customer feedback")
+      const searchTerm = id.replace(/_/g, ' ');
+      
+      // Search in system templates by category
+      let templateResult = await query(
+        `SELECT * FROM survey_templates WHERE category ILIKE $1 AND is_deleted = false`,
+        [`%${searchTerm}%`]
+      );
+      
+      if (templateResult.rows.length > 0) {
+        template = templateResult.rows[0];
+      } else {
+        // Search in custom templates by category
+        templateResult = await query(
+          `SELECT * FROM custom_templates WHERE category ILIKE $1 AND is_deleted = false AND (created_by = $2 OR is_public = true)`,
+          [`%${searchTerm}%`, req.user.id]
+        );
+        
+        if (templateResult.rows.length > 0) {
+          template = templateResult.rows[0];
+          templateType = 'custom';
+        }
+      }
+    }
+
+    if (!template) {
       return res.status(404).json({ error: 'Template not found' });
     }
     
-    const originalTemplate = surveyTemplates[id];
-    const newId = `template_${Date.now()}`;
+    // Create duplicate as custom template
+    const result = await query(
+      `INSERT INTO custom_templates (name, description, category, template_data, is_public, created_by)
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING *`,
+      [
+        name || `${template.name} (Copy)`,
+        description || template.description,
+        template.category,
+        template.template_data,
+        false, // Always private when duplicated
+        req.user.id
+      ]
+    );
     
-    // Create duplicate template
-    surveyTemplates[newId] = {
-      ...originalTemplate,
-      title: title || `${originalTemplate.title} (Copy)`,
-      description: description || originalTemplate.description
-    };
+    const transformedTemplate = transformTemplateForFrontend({ ...result.rows[0], type: 'custom' });
     
     res.json({
       message: 'Template duplicated successfully',
-      template: { id: newId, ...surveyTemplates[newId] }
+      template: transformedTemplate
     });
   } catch (error) {
     console.error('Error duplicating template:', error);
@@ -1164,22 +662,84 @@ router.post('/:id/duplicate', auth, async (req, res) => {
   }
 });
 
-// DELETE /api/templates/:id - Delete a template
+// DELETE /api/templates/:id - Soft delete a template (custom templates only)
 router.delete('/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
     
-    if (!surveyTemplates[id]) {
-      return res.status(404).json({ error: 'Template not found' });
+    // Check if template exists and belongs to user
+    const templateCheck = await query(
+      `SELECT id FROM custom_templates 
+       WHERE id = $1 AND created_by = $2 AND is_deleted = false`,
+      [id, req.user.id]
+    );
+    
+    if (templateCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Template not found or access denied' });
     }
     
-    // Delete template (in a real app, you'd delete from database)
-    delete surveyTemplates[id];
+    // Soft delete template
+    await query(
+      `UPDATE custom_templates 
+       SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP, deleted_by = $1
+       WHERE id = $2`,
+      [req.user.id, id]
+    );
     
     res.json({ message: 'Template deleted successfully' });
   } catch (error) {
     console.error('Error deleting template:', error);
     res.status(500).json({ error: 'Failed to delete template' });
+  }
+});
+
+// POST /api/templates/:id/restore - Restore a soft deleted template
+router.post('/:id/restore', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Check if template exists and belongs to user
+    const templateCheck = await query(
+      `SELECT id FROM custom_templates 
+       WHERE id = $1 AND created_by = $2 AND is_deleted = true`,
+      [id, req.user.id]
+    );
+    
+    if (templateCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Deleted template not found or access denied' });
+    }
+    
+    // Restore template
+    await query(
+      `UPDATE custom_templates 
+       SET is_deleted = false, deleted_at = NULL, deleted_by = NULL
+       WHERE id = $1`,
+      [id]
+    );
+    
+    res.json({ message: 'Template restored successfully' });
+  } catch (error) {
+    console.error('Error restoring template:', error);
+    res.status(500).json({ error: 'Failed to restore template' });
+  }
+});
+
+// GET /api/templates/deleted - Get soft deleted templates
+router.get('/deleted', auth, async (req, res) => {
+  try {
+    const result = await query(
+      `SELECT id, name, description, category, template_data, is_public, created_by, created_at, updated_at, deleted_at
+       FROM custom_templates 
+       WHERE is_deleted = true AND created_by = $1
+       ORDER BY deleted_at DESC`,
+      [req.user.id]
+    );
+    
+    const templates = result.rows.map(t => transformTemplateForFrontend({ ...t, type: 'custom' }));
+    res.json(templates);
+  } catch (error) {
+    console.error('Error fetching deleted templates:', error);
+    res.status(500).json({ error: 'Failed to fetch deleted templates' });
   }
 });
 

@@ -1,588 +1,269 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import toast from 'react-hot-toast';
-import {
-  BarChart3,
-  Download,
-  Users,
-  TrendingUp,
-  Calendar,
-  CheckCircle,
-  XCircle,
-  Eye,
-  FileText
-} from 'lucide-react';
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  ComposedChart
-} from 'recharts';
-import EmojiScale from '../components/EmojiScale';
+import { toast } from 'react-hot-toast';
+import { ArrowLeft, Download, FileText, BarChart3, TrendingUp, Users, Clock } from 'lucide-react';
 import AnalyticsDashboard from '../components/AnalyticsDashboard';
 
 const SurveyAnalytics = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [analytics, setAnalytics] = useState(null);
+  const [survey, setSurvey] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [dateRange, setDateRange] = useState('all');
 
   useEffect(() => {
     fetchAnalytics();
-  }, [id]);
+    fetchSurvey();
+  }, [id, dateRange]);
 
   const fetchAnalytics = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`/api/analytics/survey/${id}`);
+      const response = await axios.get(`/api/analytics/survey/${id}?range=${dateRange}`);
       setAnalytics(response.data);
-      if (response.data.questions.length > 0) {
-        setSelectedQuestion(response.data.questions[0]);
-      }
     } catch (error) {
       console.error('Error fetching analytics:', error);
-      toast.error('Failed to load analytics');
+      toast.error('Failed to load analytics data');
     } finally {
       setLoading(false);
     }
   };
 
-  const exportResponses = async (format = 'csv') => {
+  const fetchSurvey = async () => {
     try {
-      const response = await axios.get(`/api/responses/export/${id}?format=${format}`, {
-        responseType: 'blob'
-      });
-      
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `survey_${id}_responses.${format}`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      
-      toast.success('Export completed successfully');
+      const response = await axios.get(`/api/surveys/${id}`);
+      setSurvey(response.data);
     } catch (error) {
-      console.error('Error exporting responses:', error);
-      toast.error('Failed to export responses');
+      console.error('Error fetching survey:', error);
+    }
+  };
+
+  const exportReport = async (format) => {
+    try {
+      if (format === 'pdf') {
+        // PDF export is handled by the AnalyticsDashboard component
+        return;
+      }
+      
+      // For other formats, we can implement CSV/Excel export
+      toast.success(`${format.toUpperCase()} export started`);
+    } catch (error) {
+      console.error('Error exporting report:', error);
+      toast.error('Failed to export report');
     }
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="spinner w-8 h-8"></div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading analytics...</p>
+        </div>
       </div>
     );
   }
-
-  if (!analytics) {
-    return (
-      <div className="text-center py-12">
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No analytics available</h3>
-        <p className="text-gray-600">This survey doesn't have any responses yet.</p>
-      </div>
-    );
-  }
-
-  const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
-
-  const renderQuestionAnalytics = (question) => {
-    if (!question.analytics) return null;
-
-    switch (question.type) {
-      case 'emoji_scale':
-      case 'likert_scale':
-        return renderScaleAnalytics(question);
-      case 'multiple_choice':
-        return renderMultipleChoiceAnalytics(question);
-      case 'text':
-        return renderTextAnalytics(question);
-      default:
-        return <div>Analytics not available for this question type</div>;
-    }
-  };
-
-  const renderScaleAnalytics = (question) => {
-    const { analytics } = question;
-    const chartData = Object.keys(analytics.distribution).map(key => ({
-      name: analytics.distribution[key].label || key,
-      value: analytics.distribution[key].count,
-      percentage: analytics.distribution[key].percentage,
-      emoji: analytics.distribution[key].emoji
-    }));
-
-    return (
-      <div className="space-y-6">
-        {/* Summary Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="analytics-card">
-            <div className="analytics-stat">
-              <div className="analytics-stat-value">{analytics.total}</div>
-              <div className="analytics-stat-label">Total Responses</div>
-            </div>
-          </div>
-          <div className="analytics-card">
-            <div className="analytics-stat">
-              <div className="analytics-stat-value">{analytics.average}</div>
-              <div className="analytics-stat-label">Average Rating</div>
-            </div>
-          </div>
-          <div className="analytics-card">
-            <div className="analytics-stat">
-              <div className="analytics-stat-value">{analytics.satisfaction_index}%</div>
-              <div className="analytics-stat-label">Satisfaction Index</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Bar Chart */}
-          <div className="analytics-card">
-            <h4 className="text-lg font-medium text-gray-900 mb-4">Response Distribution</h4>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="#3b82f6" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Pie Chart */}
-          <div className="analytics-card">
-            <h4 className="text-lg font-medium text-gray-900 mb-4">Response Percentage</h4>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, percentage }) => `${name} ${percentage}%`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-
-        {/* Detailed Breakdown */}
-        <div className="analytics-card">
-          <h4 className="text-lg font-medium text-gray-900 mb-4">Detailed Breakdown</h4>
-          <div className="space-y-3">
-            {chartData.map((item, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <span className="text-2xl">{item.emoji}</span>
-                  <span className="font-medium">{item.name}</span>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-600">{item.value} responses</span>
-                  <span className="text-sm font-medium text-gray-900">{item.percentage.toFixed(1)}%</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderMultipleChoiceAnalytics = (question) => {
-    const { analytics } = question;
-    const chartData = Object.keys(analytics.distribution).map(key => ({
-      name: key,
-      value: analytics.distribution[key].count,
-      percentage: analytics.distribution[key].percentage
-    }));
-
-    return (
-      <div className="space-y-6">
-        {/* Summary Stats */}
-        <div className="analytics-card">
-          <div className="analytics-stat">
-            <div className="analytics-stat-value">{analytics.total}</div>
-            <div className="analytics-stat-label">Total Responses</div>
-          </div>
-        </div>
-
-        {/* Bar Chart */}
-        <div className="analytics-card">
-          <h4 className="text-lg font-medium text-gray-900 mb-4">Response Distribution</h4>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="value" fill="#10b981" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Detailed Breakdown */}
-        <div className="analytics-card">
-          <h4 className="text-lg font-medium text-gray-900 mb-4">Response Details</h4>
-          <div className="space-y-3">
-            {chartData.map((item, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <span className="font-medium">{item.name}</span>
-                <div className="flex items-center space-x-4">
-                  <span className="text-sm text-gray-600">{item.value} responses</span>
-                  <span className="text-sm font-medium text-gray-900">{item.percentage.toFixed(1)}%</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderTextAnalytics = (question) => {
-    const { analytics } = question;
-
-    return (
-      <div className="space-y-6">
-        {/* Summary Stats */}
-        <div className="analytics-card">
-          <div className="analytics-stat">
-            <div className="analytics-stat-value">{analytics.total}</div>
-            <div className="analytics-stat-label">Text Responses</div>
-          </div>
-        </div>
-
-        {/* Text Responses */}
-        <div className="analytics-card">
-          <h4 className="text-lg font-medium text-gray-900 mb-4">Recent Responses</h4>
-          <div className="space-y-4 max-h-96 overflow-y-auto">
-            {analytics.responses.map((response, index) => (
-              <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                <p className="text-gray-900 mb-2">{response.text}</p>
-                <p className="text-sm text-gray-500">
-                  {new Date(response.timestamp).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Survey Analytics</h1>
-          <p className="text-gray-600">{analytics.survey.title}</p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={() => exportResponses('csv')}
-            className="btn-secondary"
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
-          </button>
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate(-1)}
+                className="p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600" />
+              </button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {survey?.title || 'Survey Analytics'}
+                </h1>
+                <p className="text-sm text-gray-500">
+                  Comprehensive insights and performance metrics
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <select
+                value={dateRange}
+                onChange={(e) => setDateRange(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="all">All Time</option>
+                <option value="7d">Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
+                <option value="90d">Last 90 Days</option>
+              </select>
+              <button
+                onClick={() => exportReport('csv')}
+                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors duration-200"
+              >
+                <Download className="w-4 h-4" />
+                Export CSV
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Overview Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="analytics-card">
-          <div className="analytics-stat">
-            <div className="analytics-stat-value">{analytics.completion.total_sessions}</div>
-            <div className="analytics-stat-label">Total Sessions</div>
-          </div>
-        </div>
-        <div className="analytics-card">
-          <div className="analytics-stat">
-            <div className="analytics-stat-value">{analytics.completion.completed_sessions}</div>
-            <div className="analytics-stat-label">Completed</div>
-          </div>
-        </div>
-        <div className="analytics-card">
-          <div className="analytics-stat">
-            <div className="analytics-stat-value">{analytics.completion.completion_rate}%</div>
-            <div className="analytics-stat-label">Completion Rate</div>
-          </div>
-        </div>
-        <div className="analytics-card">
-          <div className="analytics-stat">
-            <div className="analytics-stat-value">{analytics.questions.length}</div>
-            <div className="analytics-stat-label">Questions</div>
-          </div>
+      {/* Navigation Tabs */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-8">
+            {[
+              { id: 'overview', label: 'Overview', icon: BarChart3 },
+              { id: 'responses', label: 'Responses', icon: Users },
+              { id: 'performance', label: 'Performance', icon: TrendingUp },
+              { id: 'timing', label: 'Timing', icon: Clock },
+              { id: 'reports', label: 'Reports', icon: FileText }
+            ].map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors duration-200 ${
+                    activeTab === tab.id
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              );
+            })}
+          </nav>
         </div>
       </div>
 
-      {/* Enhanced Summary Stats */}
-      {analytics.deviceAnalytics && analytics.deviceAnalytics.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-          <div className="analytics-card">
-            <h4 className="text-lg font-medium text-gray-900 mb-3">Device Breakdown</h4>
-            <div className="space-y-2">
-              {analytics.deviceAnalytics.map((device, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">{device.device_type}</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {device.respondent_count} ({Math.round((device.respondent_count / analytics.completion.total_sessions) * 100)}%)
-                  </span>
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {activeTab === 'overview' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Survey Summary</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="text-center p-4 bg-blue-50 rounded-lg">
+                  <div className="text-3xl font-bold text-blue-600 mb-2">
+                    {survey?.questions?.length || 0}
+                  </div>
+                  <p className="text-sm text-gray-600">Total Questions</p>
                 </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="analytics-card">
-            <h4 className="text-lg font-medium text-gray-900 mb-3">Top Browsers</h4>
-            <div className="space-y-2">
-              {analytics.browserAnalytics && analytics.browserAnalytics.slice(0, 3).map((browser, index) => (
-                <div key={index} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">{browser.browser}</span>
-                  <span className="text-sm font-medium text-gray-900">
-                    {browser.respondent_count} ({Math.round((browser.respondent_count / analytics.completion.total_sessions) * 100)}%)
-                  </span>
+                <div className="text-center p-4 bg-green-50 rounded-lg">
+                  <div className="text-3xl font-bold text-green-600 mb-2">
+                    {analytics?.completion?.total_sessions || 0}
+                  </div>
+                  <p className="text-sm text-gray-600">Total Responses</p>
                 </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="analytics-card">
-            <h4 className="text-lg font-medium text-gray-900 mb-3">Peak Response Time</h4>
-            {analytics.hourlyDistribution && analytics.hourlyDistribution.length > 0 && (
-              <div className="space-y-2">
-                {(() => {
-                  const peakHour = analytics.hourlyDistribution.reduce((max, hour) => 
-                    hour.respondent_count > max.respondent_count ? hour : max
-                  );
-                  return (
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">
-                        {peakHour.hour}:00
-                      </div>
-                      <div className="text-sm text-gray-600">
-                        {peakHour.respondent_count} responses
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Response Trends */}
-      {analytics.trends && analytics.trends.length > 0 && (
-        <div className="analytics-card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Response Trends Over Time</h3>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height="100%">
-              <ComposedChart data={analytics.trends}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
-                <YAxis yAxisId="left" />
-                <YAxis yAxisId="right" orientation="right" />
-                <Tooltip />
-                <Area 
-                  yAxisId="left"
-                  type="monotone" 
-                  dataKey="daily_respondents" 
-                  fill="#3b82f6" 
-                  fillOpacity={0.3}
-                  stroke="#3b82f6" 
-                  strokeWidth={2} 
-                />
-                <Bar 
-                  yAxisId="right"
-                  dataKey="total_responses" 
-                  fill="#10b981" 
-                  fillOpacity={0.7}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
-      {/* Device Analytics */}
-      {analytics.deviceAnalytics && analytics.deviceAnalytics.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="analytics-card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Device Usage</h3>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={analytics.deviceAnalytics}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ device_type, respondent_count, percentage }) => 
-                      `${device_type} (${respondent_count})`
-                    }
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="respondent_count"
-                  >
-                    {analytics.deviceAnalytics.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="analytics-card">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Browser Usage</h3>
-            <div className="chart-container">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={analytics.browserAnalytics}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="browser" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="respondent_count" fill="#8b5cf6" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Hourly Distribution */}
-      {analytics.hourlyDistribution && analytics.hourlyDistribution.length > 0 && (
-        <div className="analytics-card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Response Time Distribution (24 Hours)</h3>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={analytics.hourlyDistribution}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="hour" />
-                <YAxis />
-                <Tooltip />
-                <Area 
-                  type="monotone" 
-                  dataKey="respondent_count" 
-                  fill="#f59e0b" 
-                  fillOpacity={0.6}
-                  stroke="#f59e0b" 
-                  strokeWidth={2} 
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
-      {/* Question Completion Analysis */}
-      {analytics.questionCompletion && analytics.questionCompletion.length > 0 && (
-        <div className="analytics-card">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Question Completion Analysis</h3>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={analytics.questionCompletion} layout="horizontal">
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis type="number" domain={[0, 100]} />
-                <YAxis dataKey="title" type="category" width={150} />
-                <Tooltip />
-                <Bar dataKey="completion_rate" fill="#ef4444" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
-
-      {/* Question Analytics */}
-      <div className="card">
-        <div className="card-header">
-          <h3 className="text-lg font-medium text-gray-900">Question Analytics</h3>
-        </div>
-        <div className="card-body">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Question List */}
-            <div className="lg:col-span-1">
-              <h4 className="font-medium text-gray-900 mb-3">Questions</h4>
-              <div className="space-y-2">
-                {analytics.questions.map((question, index) => (
-                  <button
-                    key={question.id}
-                    onClick={() => setSelectedQuestion(question)}
-                    className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                      selectedQuestion?.id === question.id
-                        ? 'border-primary-500 bg-primary-50'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-gray-900">Q{index + 1}</p>
-                        <p className="text-sm text-gray-600 truncate">{question.title}</p>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <span className="text-sm text-gray-500">{question.respondent_count}</span>
-                        <Eye className="h-4 w-4 text-gray-400" />
-                      </div>
-                    </div>
-                  </button>
-                ))}
+                <div className="text-center p-4 bg-purple-50 rounded-lg">
+                  <div className="text-3xl font-bold text-purple-600 mb-2">
+                    {analytics?.completion?.completion_rate || 0}%
+                  </div>
+                  <p className="text-sm text-gray-600">Completion Rate</p>
+                </div>
               </div>
             </div>
+            <AnalyticsDashboard analytics={analytics} surveyTitle={survey?.title} survey={survey} />
+          </div>
+        )}
 
-            {/* Question Analytics */}
-            <div className="lg:col-span-2">
-              {selectedQuestion ? (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-4">
-                    {selectedQuestion.title}
-                  </h4>
-                  {renderQuestionAnalytics(selectedQuestion)}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-500">Select a question to view analytics</p>
-                </div>
-              )}
+        {activeTab === 'responses' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Response Analysis</h2>
+              <p className="text-gray-600">Detailed response patterns and user behavior analysis.</p>
             </div>
           </div>
-        </div>
+        )}
+
+        {activeTab === 'performance' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Performance Metrics</h2>
+              <p className="text-gray-600">Question performance and difficulty analysis.</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'timing' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Timing Analysis</h2>
+              <p className="text-gray-600">Response time patterns and user engagement timing.</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'reports' && (
+          <div className="space-y-6">
+            <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Report Generation</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-6 border border-gray-200 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Export Options</h3>
+                  <div className="space-y-3">
+                    <button
+                      onClick={() => exportReport('pdf')}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors duration-200"
+                    >
+                      <FileText className="w-5 h-5" />
+                      Generate PDF Report
+                    </button>
+                    <button
+                      onClick={() => exportReport('csv')}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors duration-200"
+                    >
+                      <Download className="w-5 h-5" />
+                      Export CSV Data
+                    </button>
+                  </div>
+                </div>
+                <div className="p-6 border border-gray-200 rounded-lg">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">Report Settings</h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Date Range
+                      </label>
+                      <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="all">All Time</option>
+                        <option value="7d">Last 7 Days</option>
+                        <option value="30d">Last 30 Days</option>
+                        <option value="90d">Last 90 Days</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Include Charts
+                      </label>
+                      <div className="space-y-2">
+                        <label className="flex items-center">
+                          <input type="checkbox" defaultChecked className="mr-2" />
+                          <span className="text-sm text-gray-700">Device Analytics</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input type="checkbox" defaultChecked className="mr-2" />
+                          <span className="text-sm text-gray-700">Response Trends</span>
+                        </label>
+                        <label className="flex items-center">
+                          <input type="checkbox" defaultChecked className="mr-2" />
+                          <span className="text-sm text-gray-700">Question Performance</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

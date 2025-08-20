@@ -9,7 +9,23 @@ const QRCodeShare = ({ surveyUrl, surveyTitle, shortUrl, onClose }) => {
 
   const copyToClipboard = async (text, type = 'URL') => {
     try {
-      await navigator.clipboard.writeText(text);
+      if (navigator.clipboard && window.isSecureContext) {
+        // Modern clipboard API
+        await navigator.clipboard.writeText(text);
+      } else {
+        // Fallback for older browsers or non-secure contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      
       if (type === 'short') {
         setCopiedShort(true);
         toast.success('Short URL copied to clipboard!');
@@ -20,7 +36,8 @@ const QRCodeShare = ({ surveyUrl, surveyTitle, shortUrl, onClose }) => {
         setTimeout(() => setCopied(false), 2000);
       }
     } catch (error) {
-      toast.error('Failed to copy URL');
+      console.error('Failed to copy to clipboard:', error);
+      toast.error('Failed to copy URL. Please try selecting and copying manually.');
     }
   };
 

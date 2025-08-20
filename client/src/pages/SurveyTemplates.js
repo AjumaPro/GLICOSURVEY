@@ -49,7 +49,9 @@ const SurveyTemplates = () => {
   const createFromTemplate = async (templateId, template) => {
     setCreating(true);
     try {
-      const response = await axios.post(`/api/templates/${templateId}/create`, {
+      // Use databaseId for API calls, fallback to id if databaseId doesn't exist
+      const apiId = template.databaseId || template.id;
+      const response = await axios.post(`/api/templates/${apiId}/create`, {
         title: template.title,
         description: template.description
       });
@@ -66,7 +68,9 @@ const SurveyTemplates = () => {
 
   const duplicateTemplate = async (templateId, template) => {
     try {
-      await axios.post(`/api/templates/${templateId}/duplicate`, {
+      // Use databaseId for API calls, fallback to id if databaseId doesn't exist
+      const apiId = template.databaseId || template.id;
+      await axios.post(`/api/templates/${apiId}/duplicate`, {
         title: `${template.title} (Copy)`,
         description: template.description
       });
@@ -79,13 +83,15 @@ const SurveyTemplates = () => {
     }
   };
 
-  const deleteTemplate = async (templateId) => {
+  const deleteTemplate = async (templateId, template) => {
     if (!window.confirm('Are you sure you want to delete this template?')) {
       return;
     }
 
     try {
-      await axios.delete(`/api/templates/${templateId}`);
+      // Use databaseId for API calls, fallback to id if databaseId doesn't exist
+      const apiId = template.databaseId || template.id;
+      await axios.delete(`/api/templates/${apiId}`);
       toast.success('Template deleted successfully!');
       fetchTemplates(); // Refresh the list
     } catch (error) {
@@ -107,7 +113,9 @@ const SurveyTemplates = () => {
 
   const handleCustomizeSave = async () => {
     try {
-      const response = await axios.post(`/api/templates/${selectedTemplate.id}/customize`, customizedTemplate);
+      // Use databaseId for API calls, fallback to id if databaseId doesn't exist
+      const apiId = selectedTemplate.databaseId || selectedTemplate.id;
+      const response = await axios.post(`/api/templates/${apiId}/customize`, customizedTemplate);
       toast.success('Customized template saved successfully!');
       setShowCustomizeModal(false);
       setSelectedTemplate(null);
@@ -428,7 +436,7 @@ const SurveyTemplates = () => {
                 {/* Action Buttons */}
                 <div className="space-y-3">
                   <button
-                    onClick={() => createFromTemplate(template.id, template)}
+                    onClick={() => createFromTemplate(template.databaseId || template.id, template)}
                     disabled={creating}
                     className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
                   >
@@ -451,7 +459,7 @@ const SurveyTemplates = () => {
                       Customize
                     </button>
                     <button
-                      onClick={() => duplicateTemplate(template.id, template)}
+                      onClick={() => duplicateTemplate(template.databaseId || template.id, template)}
                       className="btn-secondary text-sm py-2"
                     >
                       <Copy className="h-4 w-4 mr-1" />
@@ -460,14 +468,14 @@ const SurveyTemplates = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <button
-                      onClick={() => navigate(`/templates/${template.id}/edit`)}
+                      onClick={() => navigate(`/templates/${template.databaseId || template.id}/edit`)}
                       className="btn-secondary text-sm py-2"
                     >
                       <Edit className="h-4 w-4 mr-1" />
                       Edit
                     </button>
                     <button
-                      onClick={() => deleteTemplate(template.id)}
+                      onClick={() => deleteTemplate(template.databaseId || template.id, template)}
                       className="btn-danger text-sm py-2"
                     >
                       <Trash2 className="h-4 w-4 mr-1" />

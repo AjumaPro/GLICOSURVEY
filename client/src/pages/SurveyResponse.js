@@ -208,23 +208,27 @@ const SurveyResponse = () => {
       case 'multiple_choice':
         return (
           <div className="space-y-3">
-            {currentQuestion.options.map((option, index) => (
-              <label key={index} className={`flex items-center p-3 border rounded-lg cursor-pointer ${
-                isDarkTheme 
-                  ? "border-gray-600 hover:bg-gray-700" 
-                  : "border-gray-200 hover:bg-gray-50"
-              }`}>
-                <input
-                  type="radio"
-                  name={`question_${currentQuestion.id}`}
-                  value={option.value}
-                  checked={responses[currentQuestion.id] === option.value}
-                  onChange={(e) => handleResponseChange(currentQuestion.id, e.target.value)}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
-                />
-                <span className={`ml-3 ${isDarkTheme ? "text-gray-300" : "text-gray-700"}`}>{option.label}</span>
-              </label>
-            ))}
+            {currentQuestion.options.map((option, index) => {
+              const value = typeof option === 'object' ? option.value : option;
+              const label = typeof option === 'object' ? option.label : option;
+              return (
+                <label key={index} className={`flex items-center p-3 border rounded-lg cursor-pointer ${
+                  isDarkTheme 
+                    ? "border-gray-600 hover:bg-gray-700" 
+                    : "border-gray-200 hover:bg-gray-50"
+                }`}>
+                  <input
+                    type="radio"
+                    name={`question_${currentQuestion.id}`}
+                    value={value}
+                    checked={responses[currentQuestion.id] === value}
+                    onChange={(e) => handleResponseChange(currentQuestion.id, e.target.value)}
+                    className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                  />
+                  <span className={`ml-3 ${isDarkTheme ? "text-gray-300" : "text-gray-700"}`}>{label}</span>
+                </label>
+              );
+            })}
           </div>
         );
 
@@ -260,6 +264,39 @@ const SurveyResponse = () => {
                   <span className={`mt-1 text-sm ${isDarkTheme ? "text-gray-300" : "text-gray-700"}`}>{value}</span>
                 </label>
               ))}
+            </div>
+          </div>
+        );
+
+      case 'likert_scale':
+        return (
+          <div className="space-y-3">
+            <div className="flex justify-between items-center mb-4">
+              <span className={`text-sm ${isDarkTheme ? "text-gray-300" : "text-gray-600"}`}>
+                {currentQuestion.options?.[0]?.label || "Strongly Disagree"}
+              </span>
+              <span className={`text-sm ${isDarkTheme ? "text-gray-300" : "text-gray-600"}`}>
+                {currentQuestion.options?.[currentQuestion.options.length - 1]?.label || "Strongly Agree"}
+              </span>
+            </div>
+            <div className="flex justify-center space-x-4">
+              {(currentQuestion.options || [1, 2, 3, 4, 5]).map((option, index) => {
+                const value = typeof option === 'object' ? option.value : option;
+                const label = typeof option === 'object' ? option.label : option;
+                return (
+                  <label key={index} className="flex flex-col items-center">
+                    <input
+                      type="radio"
+                      name={`question_${currentQuestion.id}`}
+                      value={value}
+                      checked={responses[currentQuestion.id] === value}
+                      onChange={(e) => handleResponseChange(currentQuestion.id, parseInt(e.target.value))}
+                      className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                    />
+                    <span className={`mt-1 text-sm ${isDarkTheme ? "text-gray-300" : "text-gray-700"}`}>{label}</span>
+                  </label>
+                );
+              })}
             </div>
           </div>
         );
