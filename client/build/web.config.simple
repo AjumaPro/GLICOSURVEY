@@ -46,20 +46,5 @@
     <handlers>
       <remove name="WebDAV" />
     </handlers>
-
-    <!-- Error Pages -->
-    <httpErrors errorMode="Custom" existingResponse="Replace">
-      <remove statusCode="404" subStatusCode="-1" />
-      <error statusCode="404" path="/" responseMode="ExecuteURL" />
-    </httpErrors>
-
-    <!-- Security Headers -->
-    <httpProtocol>
-      <customHeaders>
-        <add name="X-Frame-Options" value="DENY" />
-        <add name="X-Content-Type-Options" value="nosniff" />
-        <add name="X-XSS-Protection" value="1; mode=block" />
-      </customHeaders>
-    </httpProtocol>
   </system.webServer>
 </configuration> 
