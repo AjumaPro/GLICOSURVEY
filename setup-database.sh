@@ -56,6 +56,10 @@ npm run migrate
 print_status "Creating admin user..."
 npm run create-admin
 
+# Create guest user
+print_status "Creating guest user..."
+npm run create-guest
+
 print_status "Database setup completed successfully!"
 
 echo ""
@@ -67,6 +71,11 @@ echo ""
 echo "🔐 Admin credentials:"
 echo "   - Email: admin@glico.com"
 echo "   - Password: admin123"
+echo ""
+echo "👤 Guest credentials:"
+echo "   - Email: guest@glico.com"
+echo "   - Password: guest123"
+echo "   - Full access to all features"
 echo ""
 echo "⚠️  IMPORTANT: Change the database password and admin password in production!"
 echo "" 

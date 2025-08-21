@@ -13,6 +13,7 @@
     "migrate": "node server/database/migrate.js",
     "create-admin": "node server/scripts/create-super-admin.js",
     "create-test-admin": "node server/scripts/create-admin-user.js",
+    "create-guest": "node server/scripts/create-guest-user.js",
     "create-platinum-template": "node server/scripts/create-platinum-banking-template.js",
     "start": "node server/index.js",
     "start:prod": "NODE_ENV=production node server/index.js",
