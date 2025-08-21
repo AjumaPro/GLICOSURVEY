@@ -22,6 +22,13 @@ const Login = () => {
     });
   };
 
+  const handleDemoAccount = (email, password) => {
+    setFormData({
+      email,
+      password
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -118,6 +125,37 @@ const Login = () => {
             <p className="text-sm text-gray-600">
               Need an account? Contact your administrator to create one.
             </p>
+            
+            {/* Demo Accounts Section */}
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h3 className="text-sm font-medium text-blue-900 mb-3">Demo Accounts</h3>
+              <div className="space-y-2 text-xs text-blue-800">
+                <div 
+                  className="flex justify-between items-center cursor-pointer hover:bg-blue-100 p-2 rounded transition-colors"
+                  onClick={() => handleDemoAccount('admin@glico.com', 'admin123')}
+                >
+                  <span className="font-medium">Admin:</span>
+                  <span>admin@glico.com / admin123</span>
+                </div>
+                <div 
+                  className="flex justify-between items-center cursor-pointer hover:bg-blue-100 p-2 rounded transition-colors"
+                  onClick={() => handleDemoAccount('guest@glico.com', 'guest123')}
+                >
+                  <span className="font-medium">Guest:</span>
+                  <span>guest@glico.com / guest123</span>
+                </div>
+                <div 
+                  className="flex justify-between items-center cursor-pointer hover:bg-blue-100 p-2 rounded transition-colors"
+                  onClick={() => handleDemoAccount('admin@test.com', 'admin123')}
+                >
+                  <span className="font-medium">Test Admin:</span>
+                  <span>admin@test.com / admin123</span>
+                </div>
+              </div>
+              <p className="text-xs text-blue-600 mt-2">
+                Click on any account to auto-fill the form
+              </p>
+            </div>
           </div>
         </form>
       </div>
