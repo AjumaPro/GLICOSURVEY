@@ -121,6 +121,38 @@ const Login = () => {
             </button>
           </div>
 
+          {/* Guest Login Button */}
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => handleDemoAccount('guest@glico.com', 'guest123')}
+              className="w-full flex justify-center py-3 px-4 border border-green-300 text-sm font-medium rounded-lg text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
+            >
+              <span className="mr-2">👤</span>
+              Login as Guest (Full Access)
+            </button>
+          </div>
+
+          {/* Quick Login Buttons */}
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => handleDemoAccount('admin@glico.com', 'admin123')}
+              className="flex justify-center py-2 px-3 border border-blue-300 text-xs font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
+            >
+              <span className="mr-1">👑</span>
+              Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDemoAccount('admin@test.com', 'admin123')}
+              className="flex justify-center py-2 px-3 border border-purple-300 text-xs font-medium rounded-lg text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200"
+            >
+              <span className="mr-1">🧪</span>
+              Test Admin
+            </button>
+          </div>
+
           <div className="text-center">
             <p className="text-sm text-gray-600">
               Need an account? Contact your administrator to create one.
