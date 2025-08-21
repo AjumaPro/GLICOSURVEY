@@ -6,19 +6,41 @@ const auth = require('../middleware/auth');
 // GET /api/surveys - Get all surveys for a user (excluding soft deleted)
 router.get('/', auth, async (req, res) => {
   try {
-    const result = await query(
-      `SELECT s.*, 
-              COUNT(q.id) as question_count,
-              COUNT(DISTINCT r.session_id) as responses_count
-       FROM surveys s
-       LEFT JOIN questions q ON s.id = q.survey_id AND q.is_deleted = false
-       LEFT JOIN responses r ON s.id = r.survey_id
-       WHERE s.user_id = $1 AND s.is_deleted = false
-       GROUP BY s.id
-       ORDER BY s.updated_at DESC`,
-      [req.user.id]
-    );
+    let queryText, params;
+    
+    // If user has 'user' role (guest), show all surveys
+    // If user has 'admin' or 'super_admin' role, show only their own surveys
+    if (req.user.role === 'user') {
+      queryText = `
+        SELECT s.*, 
+                u.name as author_name,
+                COUNT(q.id) as question_count,
+                COUNT(DISTINCT r.session_id) as responses_count
+         FROM surveys s
+         LEFT JOIN users u ON s.user_id = u.id
+         LEFT JOIN questions q ON s.id = q.survey_id AND q.is_deleted = false
+         LEFT JOIN responses r ON s.id = r.survey_id
+         WHERE s.is_deleted = false
+         GROUP BY s.id, u.name
+         ORDER BY s.updated_at DESC
+      `;
+      params = [];
+    } else {
+      queryText = `
+        SELECT s.*, 
+                COUNT(q.id) as question_count,
+                COUNT(DISTINCT r.session_id) as responses_count
+         FROM surveys s
+         LEFT JOIN questions q ON s.id = q.survey_id AND q.is_deleted = false
+         LEFT JOIN responses r ON s.id = r.survey_id
+         WHERE s.user_id = $1 AND s.is_deleted = false
+         GROUP BY s.id
+         ORDER BY s.updated_at DESC
+      `;
+      params = [req.user.id];
+    }
 
+    const result = await query(queryText, params);
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching surveys:', error);
@@ -29,19 +51,41 @@ router.get('/', auth, async (req, res) => {
 // GET /api/surveys/deleted - Get soft deleted surveys for a user
 router.get('/deleted', auth, async (req, res) => {
   try {
-    const result = await query(
-      `SELECT s.*, 
-              COUNT(q.id) as question_count,
-              COUNT(DISTINCT r.session_id) as responses_count
-       FROM surveys s
-       LEFT JOIN questions q ON s.id = q.survey_id AND q.is_deleted = false
-       LEFT JOIN responses r ON s.id = r.survey_id
-       WHERE s.user_id = $1 AND s.is_deleted = true
-       GROUP BY s.id
-       ORDER BY s.deleted_at DESC`,
-      [req.user.id]
-    );
+    let queryText, params;
+    
+    // If user has 'user' role (guest), show all deleted surveys
+    // If user has 'admin' or 'super_admin' role, show only their own deleted surveys
+    if (req.user.role === 'user') {
+      queryText = `
+        SELECT s.*, 
+                u.name as author_name,
+                COUNT(q.id) as question_count,
+                COUNT(DISTINCT r.session_id) as responses_count
+         FROM surveys s
+         LEFT JOIN users u ON s.user_id = u.id
+         LEFT JOIN questions q ON s.id = q.survey_id AND q.is_deleted = false
+         LEFT JOIN responses r ON s.id = r.survey_id
+         WHERE s.is_deleted = true
+         GROUP BY s.id, u.name
+         ORDER BY s.deleted_at DESC
+      `;
+      params = [];
+    } else {
+      queryText = `
+        SELECT s.*, 
+                COUNT(q.id) as question_count,
+                COUNT(DISTINCT r.session_id) as responses_count
+         FROM surveys s
+         LEFT JOIN questions q ON s.id = q.survey_id AND q.is_deleted = false
+         LEFT JOIN responses r ON s.id = r.survey_id
+         WHERE s.user_id = $1 AND s.is_deleted = true
+         GROUP BY s.id
+         ORDER BY s.deleted_at DESC
+      `;
+      params = [req.user.id];
+    }
 
+    const result = await query(queryText, params);
     res.json(result.rows);
   } catch (error) {
     console.error('Error fetching deleted surveys:', error);

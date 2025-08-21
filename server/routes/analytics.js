@@ -6,58 +6,121 @@ const auth = require('../middleware/auth');
 // GET /api/analytics/dashboard - Get dashboard overview
 router.get('/dashboard', auth, async (req, res) => {
   try {
+    let surveysQuery, responsesQuery, recentActivityQuery, topSurveysQuery, params;
+    
+    // If user has 'user' role (guest), show analytics for all surveys
+    // If user has 'admin' or 'super_admin' role, show only their own surveys
+    if (req.user.role === 'user') {
+      surveysQuery = `
+        SELECT 
+          COUNT(*) as total_surveys,
+          COUNT(CASE WHEN status = 'published' THEN 1 END) as published_surveys,
+          COUNT(CASE WHEN status = 'draft' THEN 1 END) as draft_surveys
+         FROM surveys 
+         WHERE is_deleted = false
+      `;
+      
+      responsesQuery = `
+        SELECT COUNT(DISTINCT r.session_id) as total_respondents
+         FROM responses r
+         JOIN surveys s ON r.survey_id = s.id
+         WHERE s.is_deleted = false
+      `;
+      
+      recentActivityQuery = `
+        SELECT 
+          s.title as survey_title,
+          s.id as survey_id,
+          u.name as author_name,
+          COUNT(DISTINCT r.session_id) as new_responses,
+          MAX(r.created_at) as last_response
+         FROM surveys s
+         LEFT JOIN users u ON s.user_id = u.id
+         LEFT JOIN responses r ON s.id = r.survey_id
+         WHERE s.is_deleted = false 
+           AND (r.created_at >= NOW() - INTERVAL '7 days' OR r.created_at IS NULL)
+         GROUP BY s.id, s.title, u.name
+         ORDER BY last_response DESC NULLS LAST
+         LIMIT 5
+      `;
+      
+      topSurveysQuery = `
+        SELECT 
+          s.title,
+          s.id,
+          u.name as author_name,
+          COUNT(DISTINCT r.session_id) as respondent_count,
+          COUNT(r.id) as total_responses
+         FROM surveys s
+         LEFT JOIN users u ON s.user_id = u.id
+         LEFT JOIN responses r ON s.id = r.survey_id
+         WHERE s.is_deleted = false AND s.status = 'published'
+         GROUP BY s.id, s.title, u.name
+         ORDER BY respondent_count DESC
+         LIMIT 5
+      `;
+      
+      params = [];
+    } else {
+      surveysQuery = `
+        SELECT 
+          COUNT(*) as total_surveys,
+          COUNT(CASE WHEN status = 'published' THEN 1 END) as published_surveys,
+          COUNT(CASE WHEN status = 'draft' THEN 1 END) as draft_surveys
+         FROM surveys 
+         WHERE user_id = $1
+      `;
+      
+      responsesQuery = `
+        SELECT COUNT(DISTINCT r.session_id) as total_respondents
+         FROM responses r
+         JOIN surveys s ON r.survey_id = s.id
+         WHERE s.user_id = $1
+      `;
+      
+      recentActivityQuery = `
+        SELECT 
+          s.title as survey_title,
+          s.id as survey_id,
+          COUNT(DISTINCT r.session_id) as new_responses,
+          MAX(r.created_at) as last_response
+         FROM surveys s
+         LEFT JOIN responses r ON s.id = r.survey_id
+         WHERE s.user_id = $1 
+           AND (r.created_at >= NOW() - INTERVAL '7 days' OR r.created_at IS NULL)
+         GROUP BY s.id, s.title
+         ORDER BY last_response DESC NULLS LAST
+         LIMIT 5
+      `;
+      
+      topSurveysQuery = `
+        SELECT 
+          s.title,
+          s.id,
+          COUNT(DISTINCT r.session_id) as respondent_count,
+          COUNT(r.id) as total_responses
+         FROM surveys s
+         LEFT JOIN responses r ON s.id = r.survey_id
+         WHERE s.user_id = $1 AND s.status = 'published'
+         GROUP BY s.id, s.title
+         ORDER BY respondent_count DESC
+         LIMIT 5
+      `;
+      
+      params = [req.user.id];
+    }
+
     // Get user's surveys summary
-    const surveysResult = await query(
-      `SELECT 
-        COUNT(*) as total_surveys,
-        COUNT(CASE WHEN status = 'published' THEN 1 END) as published_surveys,
-        COUNT(CASE WHEN status = 'draft' THEN 1 END) as draft_surveys
-       FROM surveys 
-       WHERE user_id = $1`,
-      [req.user.id]
-    );
+    const surveysResult = await query(surveysQuery, params);
 
     // Get total responses across all surveys
-    const responsesResult = await query(
-      `SELECT COUNT(DISTINCT r.session_id) as total_respondents
-       FROM responses r
-       JOIN surveys s ON r.survey_id = s.id
-       WHERE s.user_id = $1`,
-      [req.user.id]
-    );
+    const responsesResult = await query(responsesQuery, params);
 
     // Get recent activity
-    const recentActivityResult = await query(
-      `SELECT 
-        s.title as survey_title,
-        s.id as survey_id,
-        COUNT(DISTINCT r.session_id) as new_responses,
-        MAX(r.created_at) as last_response
-       FROM surveys s
-       LEFT JOIN responses r ON s.id = r.survey_id
-       WHERE s.user_id = $1 
-         AND (r.created_at >= NOW() - INTERVAL '7 days' OR r.created_at IS NULL)
-       GROUP BY s.id, s.title
-       ORDER BY last_response DESC NULLS LAST
-       LIMIT 5`,
-      [req.user.id]
-    );
+    const recentActivityResult = await query(recentActivityQuery, params);
 
     // Get top performing surveys
-    const topSurveysResult = await query(
-      `SELECT 
-        s.title,
-        s.id,
-        COUNT(DISTINCT r.session_id) as respondent_count,
-        COUNT(r.id) as total_responses
-       FROM surveys s
-       LEFT JOIN responses r ON s.id = r.survey_id
-       WHERE s.user_id = $1 AND s.status = 'published'
-       GROUP BY s.id, s.title
-       ORDER BY respondent_count DESC
-       LIMIT 5`,
-      [req.user.id]
-    );
+    const topSurveysResult = await query(topSurveysQuery, params);
 
     res.json({
       summary: {
@@ -80,15 +143,26 @@ router.get('/survey/:id', auth, async (req, res) => {
     const { id } = req.params;
     const userId = req.user.id;
 
-    // Verify survey ownership
-    const surveyResult = await query(
-      'SELECT * FROM surveys WHERE id = $1 AND user_id = $2',
-      [id, userId]
-    );
+    // Verify survey exists and user has access
+    let surveyQuery, surveyParams;
+    
+    if (req.user.role === 'user') {
+      // Guest users can view analytics for any survey
+      surveyQuery = 'SELECT * FROM surveys WHERE id = $1 AND is_deleted = false';
+      surveyParams = [id];
+    } else {
+      // Admin users can only view their own surveys
+      surveyQuery = 'SELECT * FROM surveys WHERE id = $1 AND user_id = $2 AND is_deleted = false';
+      surveyParams = [id, userId];
+    }
+
+    const surveyResult = await query(surveyQuery, surveyParams);
 
     if (surveyResult.rows.length === 0) {
       return res.status(404).json({ error: 'Survey not found' });
     }
+
+    const survey = surveyResult.rows[0];
 
     // Get survey questions
     const questionsResult = await query(
@@ -371,7 +445,7 @@ router.get('/survey/:id', auth, async (req, res) => {
     });
 
     res.json({
-      survey: surveyResult.rows[0],
+      survey: survey,
       questions: questionsResult.rows,
       trends: trendsResult.rows,
       completion: completionResult.rows[0] || { total_sessions: 0, completed_sessions: 0, completion_rate: 0 },
@@ -400,14 +474,31 @@ router.get('/question/:id', auth, async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Verify question belongs to user's survey
-    const questionCheck = await query(
-      `SELECT q.*, s.title as survey_title
-       FROM questions q
-       JOIN surveys s ON q.survey_id = s.id
-       WHERE q.id = $1 AND s.user_id = $2`,
-      [id, req.user.id]
-    );
+    // Verify question exists and user has access
+    let questionQuery, questionParams;
+    
+    if (req.user.role === 'user') {
+      // Guest users can view analytics for any question
+      questionQuery = `
+        SELECT q.*, s.title as survey_title, u.name as author_name
+         FROM questions q
+         JOIN surveys s ON q.survey_id = s.id
+         LEFT JOIN users u ON s.user_id = u.id
+         WHERE q.id = $1 AND s.is_deleted = false
+      `;
+      questionParams = [id];
+    } else {
+      // Admin users can only view questions from their own surveys
+      questionQuery = `
+        SELECT q.*, s.title as survey_title
+         FROM questions q
+         JOIN surveys s ON q.survey_id = s.id
+         WHERE q.id = $1 AND s.user_id = $2 AND s.is_deleted = false
+      `;
+      questionParams = [id, req.user.id];
+    }
+
+    const questionCheck = await query(questionQuery, questionParams);
 
     if (questionCheck.rows.length === 0) {
       return res.status(404).json({ error: 'Question not found' });

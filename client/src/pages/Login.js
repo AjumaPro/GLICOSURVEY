@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
+import { ArrowRight, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import GlicoLogo from '../components/GlicoLogo';
 
@@ -22,11 +22,18 @@ const Login = () => {
     });
   };
 
-  const handleDemoAccount = (email, password) => {
-    setFormData({
-      email,
-      password
-    });
+  const handleGuestLogin = async () => {
+    setLoading(true);
+    try {
+      await login('guest@glico.com', 'guest123');
+      toast.success('Guest login successful!');
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Guest login error:', error);
+      toast.error(error.response?.data?.error || 'Guest login failed');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -125,31 +132,11 @@ const Login = () => {
           <div className="mt-4">
             <button
               type="button"
-              onClick={() => handleDemoAccount('guest@glico.com', 'guest123')}
+              onClick={handleGuestLogin}
               className="w-full flex justify-center py-3 px-4 border border-green-300 text-sm font-medium rounded-lg text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"
             >
               <span className="mr-2">👤</span>
-              Login as Guest (Full Access)
-            </button>
-          </div>
-
-          {/* Quick Login Buttons */}
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => handleDemoAccount('admin@glico.com', 'admin123')}
-              className="flex justify-center py-2 px-3 border border-blue-300 text-xs font-medium rounded-lg text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"
-            >
-              <span className="mr-1">👑</span>
-              Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => handleDemoAccount('admin@test.com', 'admin123')}
-              className="flex justify-center py-2 px-3 border border-purple-300 text-xs font-medium rounded-lg text-purple-700 bg-purple-50 hover:bg-purple-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200"
-            >
-              <span className="mr-1">🧪</span>
-              Test Admin
+              Login as Guest (All Features)
             </button>
           </div>
 
@@ -157,37 +144,6 @@ const Login = () => {
             <p className="text-sm text-gray-600">
               Need an account? Contact your administrator to create one.
             </p>
-            
-            {/* Demo Accounts Section */}
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-              <h3 className="text-sm font-medium text-blue-900 mb-3">Demo Accounts</h3>
-              <div className="space-y-2 text-xs text-blue-800">
-                <div 
-                  className="flex justify-between items-center cursor-pointer hover:bg-blue-100 p-2 rounded transition-colors"
-                  onClick={() => handleDemoAccount('admin@glico.com', 'admin123')}
-                >
-                  <span className="font-medium">Admin:</span>
-                  <span>admin@glico.com / admin123</span>
-                </div>
-                <div 
-                  className="flex justify-between items-center cursor-pointer hover:bg-blue-100 p-2 rounded transition-colors"
-                  onClick={() => handleDemoAccount('guest@glico.com', 'guest123')}
-                >
-                  <span className="font-medium">Guest:</span>
-                  <span>guest@glico.com / guest123</span>
-                </div>
-                <div 
-                  className="flex justify-between items-center cursor-pointer hover:bg-blue-100 p-2 rounded transition-colors"
-                  onClick={() => handleDemoAccount('admin@test.com', 'admin123')}
-                >
-                  <span className="font-medium">Test Admin:</span>
-                  <span>admin@test.com / admin123</span>
-                </div>
-              </div>
-              <p className="text-xs text-blue-600 mt-2">
-                Click on any account to auto-fill the form
-              </p>
-            </div>
           </div>
         </form>
       </div>

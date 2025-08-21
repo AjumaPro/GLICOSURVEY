@@ -25,12 +25,12 @@ const createGuestUser = async () => {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    // Create guest user with admin role for full access
+    // Create guest user with user role (all access except admin dashboard)
     const result = await query(
       `INSERT INTO users (email, password_hash, name, role, is_active)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, email, name, role, is_active`,
-      [email, passwordHash, name, 'admin', true]
+      [email, passwordHash, name, 'user', true]
     );
 
     const user = result.rows[0];
@@ -43,8 +43,9 @@ const createGuestUser = async () => {
     console.log('✅ Active:', user.is_active);
     console.log('');
     console.log('🔐 Password:', password);
-    console.log('🎯 Full Access: Can create, edit, delete surveys, view analytics, manage templates');
-    console.log('⚠️  This is a guest account with admin privileges!');
+    console.log('🎯 Access: Can create, edit, delete surveys, view analytics, manage templates');
+    console.log('🚫 Restricted: No access to admin dashboard');
+    console.log('⚠️  This is a guest account with user privileges!');
 
   } catch (error) {
     console.error('❌ Error creating guest user:', error);

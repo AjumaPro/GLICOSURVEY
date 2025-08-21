@@ -34,6 +34,29 @@ const ProtectedRoute = ({ children }) => {
   return user ? children : <Navigate to="/login" replace />;
 };
 
+// Admin Route Component (only for admin users)
+const AdminRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="spinner w-8 h-8"></div>
+      </div>
+    );
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (user.role !== 'admin' && user.role !== 'super_admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+  
+  return children;
+};
+
 // Public Route Component (redirects to dashboard if already logged in)
 const PublicRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -86,7 +109,11 @@ function AppRoutes() {
            <Route path="builder/:id" element={<SurveyBuilder />} />
            <Route path="publish/:id" element={<PublishSurvey />} />
         <Route path="analytics/:id" element={<SurveyAnalytics />} />
-        <Route path="admin" element={<AdminDashboard />} />
+        <Route path="admin" element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
+        } />
         <Route path="profile" element={<Profile />} />
         <Route path="emoji-test" element={<EmojiTest />} />
       </Route>
