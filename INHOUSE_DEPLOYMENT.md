@@ -1,13 +1,29 @@
 # In-House Server Deployment Guide
 
 ## Prerequisites
-- Node.js 18+ installed on your server
-- PostgreSQL database running
+- Ubuntu/Debian or CentOS/RHEL server
+- Node.js 18+ installed
+- PostgreSQL 12+ installed and running
+- Nginx installed
 - PM2 (for process management) - `npm install -g pm2`
+
+## Quick Deployment
+
+### Option 1: Automated Deployment (Recommended)
+```bash
+# Clone the repository
+git clone https://github.com/AjumaPro/GLICOSURVEY.git
+cd GLICOSURVEY
+
+# Run the automated deployment script
+./deploy-inhouse.sh
+```
+
+### Option 2: Manual Deployment
 
 ## Step 1: Environment Configuration
 
-Create a `.env` file in the root directory with your production settings:
+Create a `.env` file in the root directory:
 
 ```bash
 # Production Environment
@@ -15,14 +31,14 @@ NODE_ENV=production
 PORT=5000
 
 # Database Configuration
-DATABASE_URL=postgresql://username:password@localhost:5432/glico_survey_db
+DATABASE_URL=postgresql://glico_user:your_secure_password@localhost:5432/glico_survey_db
 
 # JWT Configuration (CHANGE THIS!)
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
+JWT_SECRET=your-super-secret-jwt-key-change-this-in-production-2024
 
 # Frontend URL (UPDATE WITH YOUR SERVER DOMAIN)
-FRONTEND_URL=http://your-server-ip:3000
-# or if using domain: FRONTEND_URL=https://yourdomain.com
+FRONTEND_URL=http://your-server-domain.com
+# or if using IP: FRONTEND_URL=http://your-server-ip
 
 # Super Admin Configuration
 SUPER_ADMIN_EMAIL=admin@glico.com
@@ -33,124 +49,168 @@ SUPER_ADMIN_NAME=Super Admin
 ## Step 2: Database Setup
 
 ```bash
-# Connect to your PostgreSQL server
-psql -U postgres
+# Run the database setup script
+./setup-database.sh
+
+# Or manually:
+# Create database user
+sudo -u postgres psql -c "CREATE USER glico_user WITH PASSWORD 'your_secure_password';"
 
 # Create database
-CREATE DATABASE glico_survey_db;
+sudo -u postgres psql -c "CREATE DATABASE glico_survey_db OWNER glico_user;"
 
-# Exit psql
-\q
+# Grant privileges
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE glico_survey_db TO glico_user;"
 
-# Run database setup
+# Setup database schema
 npm run setup-db
 npm run migrate
 npm run create-admin
 ```
 
-## Step 3: Build the Application
+## Step 3: Build and Deploy
 
 ```bash
 # Install dependencies
 npm install
+cd client && npm install && cd ..
 
 # Build the React frontend
 npm run build
+
+# Copy build files to web directory
+sudo mkdir -p /var/www/glico-survey
+sudo cp -r client/build/* /var/www/glico-survey/
+sudo chown -R www-data:www-data /var/www/glico-survey
+sudo chmod -R 755 /var/www/glico-survey
 ```
 
-## Step 4: Start the Application
-
-### Option A: Using PM2 (Recommended)
+## Step 4: Nginx Configuration
 
 ```bash
-# Install PM2 globally if not already installed
-npm install -g pm2
+# Copy Nginx configuration
+sudo cp nginx.conf /etc/nginx/sites-available/glico-survey
 
+# Edit the configuration with your domain
+sudo nano /etc/nginx/sites-available/glico-survey
+
+# Create symlink
+sudo ln -s /etc/nginx/sites-available/glico-survey /etc/nginx/sites-enabled/
+
+# Test configuration
+sudo nginx -t
+
+# Restart Nginx
+sudo systemctl restart nginx
+```
+
+**Important:** Update the `server_name` in `nginx.conf` with your actual domain or IP address.
+
+## Step 5: Start the Application
+
+### Using PM2 (Recommended)
+```bash
 # Start the application
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.js --env production
 
 # Save PM2 configuration
 pm2 save
 
-# Set PM2 to start on boot
+# Setup PM2 to start on boot
 pm2 startup
+# Run the command that PM2 provides
 ```
 
-### Option B: Direct Start
-
+### Using Systemd
 ```bash
-# Start in production mode
-NODE_ENV=production npm start
-```
-
-## Step 5: Configure Reverse Proxy (Optional but Recommended)
-
-If you're using Nginx, add this configuration:
-
-```nginx
-server {
-    listen 80;
-    server_name your-domain.com;
-
-    location / {
-        proxy_pass http://localhost:5000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
+# Enable and start the service
+sudo systemctl enable glico-survey
+sudo systemctl start glico-survey
 ```
 
 ## Step 6: Verify Deployment
 
-1. **Check server health:**
+1. **Check application health:**
    ```bash
-   curl http://localhost:5000/api/health
+   curl http://your-server-domain.com/health
    ```
 
 2. **Test login API:**
    ```bash
-   curl -X POST http://localhost:5000/api/auth/login \
+   curl -X POST http://your-server-domain.com/api/auth/login \
      -H "Content-Type: application/json" \
      -d '{"email":"admin@glico.com","password":"admin123"}'
    ```
 
 3. **Access the application:**
-   - Frontend: `http://your-server-ip:3000` or `http://your-domain.com`
-   - Backend API: `http://your-server-ip:5000/api`
+   - Frontend: `http://your-server-domain.com`
+   - API: `http://your-server-domain.com/api`
+
+## Security Checklist
+
+- [ ] Change JWT_SECRET to a strong random string
+- [ ] Update database password
+- [ ] Change admin password
+- [ ] Configure firewall rules
+- [ ] Set up SSL/TLS certificates
+- [ ] Configure rate limiting
+- [ ] Set up monitoring and logging
+
+## Firewall Configuration
+
+```bash
+# Allow HTTP and HTTPS
+sudo ufw allow 80
+sudo ufw allow 443
+
+# Allow SSH (if needed)
+sudo ufw allow 22
+
+# Enable firewall
+sudo ufw enable
+```
+
+## SSL/TLS Setup (Optional but Recommended)
+
+```bash
+# Install Certbot
+sudo apt-get install certbot python3-certbot-nginx
+
+# Get SSL certificate
+sudo certbot --nginx -d your-domain.com
+
+# Auto-renewal
+sudo crontab -e
+# Add: 0 12 * * * /usr/bin/certbot renew --quiet
+```
+
+## Monitoring and Logs
+
+### Application Logs
+```bash
+# PM2 logs
+pm2 logs glico-survey-api
+
+# Systemd logs
+sudo journalctl -u glico-survey -f
+```
+
+### Nginx Logs
+```bash
+# Access logs
+sudo tail -f /var/log/nginx/access.log
+
+# Error logs
+sudo tail -f /var/log/nginx/error.log
+```
+
+### Database Logs
+```bash
+# PostgreSQL logs
+sudo tail -f /var/log/postgresql/postgresql-*.log
+```
 
 ## Troubleshooting
-
-### Login Issues
-
-1. **Check if backend is running:**
-   ```bash
-   pm2 status
-   # or
-   lsof -i :5000
-   ```
-
-2. **Check CORS configuration:**
-   - Ensure `FRONTEND_URL` in `.env` matches your actual frontend URL
-   - Check browser console for CORS errors
-
-3. **Check database connection:**
-   ```bash
-   # Test database connection
-   psql $DATABASE_URL -c "SELECT 1;"
-   ```
-
-4. **Check logs:**
-   ```bash
-   pm2 logs
-   # or
-   tail -f logs/app.log
-   ```
 
 ### Common Issues
 
@@ -161,23 +221,50 @@ server {
    ```
 
 2. **Database connection failed:**
-   - Check PostgreSQL is running
-   - Verify DATABASE_URL format
-   - Ensure database exists
-
-3. **Build files not found:**
    ```bash
-   npm run build
+   # Check PostgreSQL status
+   sudo systemctl status postgresql
+   
+   # Test connection
+   psql -h localhost -U glico_user -d glico_survey_db
    ```
 
-## Security Checklist
+3. **Nginx configuration errors:**
+   ```bash
+   sudo nginx -t
+   sudo systemctl status nginx
+   ```
 
-- [ ] Change JWT_SECRET to a strong random string
-- [ ] Update SUPER_ADMIN_PASSWORD
-- [ ] Configure firewall rules
-- [ ] Set up SSL/TLS certificates
-- [ ] Configure rate limiting
-- [ ] Set up monitoring and logging
+4. **Permission issues:**
+   ```bash
+   sudo chown -R www-data:www-data /var/www/glico-survey
+   sudo chmod -R 755 /var/www/glico-survey
+   ```
+
+### Performance Optimization
+
+1. **Enable Nginx caching:**
+   ```nginx
+   # Add to nginx.conf
+   location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+       expires 1y;
+       add_header Cache-Control "public, immutable";
+   }
+   ```
+
+2. **Enable Gzip compression:**
+   ```nginx
+   # Already included in nginx.conf
+   gzip on;
+   gzip_types text/plain text/css application/json application/javascript;
+   ```
+
+3. **Database optimization:**
+   ```sql
+   -- Add indexes for better performance
+   CREATE INDEX idx_surveys_user_id ON surveys(user_id);
+   CREATE INDEX idx_responses_survey_id ON responses(survey_id);
+   ```
 
 ## Login Credentials
 
@@ -187,7 +274,8 @@ server {
 ## Support
 
 If you encounter issues:
-1. Check the logs: `pm2 logs`
-2. Verify environment variables
+1. Check the logs: `pm2 logs` or `sudo journalctl -u glico-survey`
+2. Verify environment variables in `.env`
 3. Test API endpoints directly
-4. Check browser console for errors 
+4. Check browser console for errors
+5. Verify Nginx configuration: `sudo nginx -t` 
