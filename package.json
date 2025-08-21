@@ -22,38 +22,40 @@
     "pm2:stop": "pm2 stop ecosystem.config.js",
     "pm2:restart": "pm2 restart ecosystem.config.js",
     "pm2:delete": "pm2 delete ecosystem.config.js",
-    "pm2:logs": "pm2 logs",
-    "pm2:status": "pm2 status",
-    "deploy": "npm run build && npm run pm2:restart",
-    "setup-production": "npm run install-all && npm run build && npm run setup-db && npm run migrate && npm run create-admin",
-    "iis:setup": "npm run install-all && npm run build && npm run setup-db && npm run migrate && npm run create-admin",
-    "iis:deploy": "npm run build"
-  },
-  "dependencies": {
-    "axios": "^1.11.0",
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "express-rate-limit": "^7.1.5",
-    "firebase": "^10.7.1",
-    "helmet": "^7.1.0",
-    "jsonwebtoken": "^9.0.2",
-    "multer": "^1.4.5-lts.1",
-    "pg": "^8.11.3",
-    "uuid": "^9.0.1"
-  },
-  "devDependencies": {
-    "concurrently": "^8.2.2",
-    "nodemon": "^3.0.2"
+    "postinstall": "cd client && npm install",
+    "railway:build": "npm run install-all && npm run build",
+    "railway:start": "npm run start:prod",
+    "railway:setup": "npm run setup-db && npm run migrate && npm run create-admin && npm run create-guest",
+    "build:full": "npm run install-all && npm run build"
   },
   "keywords": [
     "survey",
-    "forms",
     "analytics",
-    "emoji-scales",
+    "react",
+    "nodejs",
+    "postgresql",
+    "emoji-scale",
     "drag-drop"
   ],
-  "author": "SurveyGuy Team",
-  "license": "MIT"
+  "author": "GLICO Survey Team",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.7.0",
+    "helmet": "^6.1.5",
+    "jsonwebtoken": "^9.0.0",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.10.0"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0",
+    "nodemon": "^2.0.22"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
 }
