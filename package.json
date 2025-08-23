@@ -1,0 +1,63 @@
+{
+  "name": "survey-guy",
+  "version": "1.0.0",
+  "description": "A comprehensive survey platform with drag & drop builder, emoji scales, and real-time analytics",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "nodemon server/index.js",
+    "client": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "install-all": "npm install && cd client && npm install",
+    "setup-db": "node server/database/setup.js",
+    "migrate": "node server/database/migrate.js",
+    "create-admin": "node server/scripts/create-super-admin.js",
+    "create-test-admin": "node server/scripts/create-admin-user.js",
+    "create-guest": "node server/scripts/create-guest-user.js",
+    "update-guest-role": "node server/scripts/update-guest-role.js",
+    "create-platinum-template": "node server/scripts/create-platinum-banking-template.js",
+    "start": "node server/index.js",
+    "start:prod": "NODE_ENV=production node server/index.js",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop ecosystem.config.js",
+    "pm2:restart": "pm2 restart ecosystem.config.js",
+    "pm2:delete": "pm2 delete ecosystem.config.js",
+    "postinstall": "cd client && npm install",
+    "railway:build": "npm run install-all && npm run build",
+    "railway:start": "npm run start:prod",
+    "railway:setup": "npm run setup-db && npm run migrate && npm run create-admin && npm run create-guest",
+    "build:full": "npm run install-all && npm run build"
+  },
+  "keywords": [
+    "survey",
+    "analytics",
+    "react",
+    "nodejs",
+    "postgresql",
+    "emoji-scale",
+    "drag-drop"
+  ],
+  "author": "GLICO Survey Team",
+  "license": "MIT",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.7.0",
+    "firebase": "^12.1.0",
+    "helmet": "^6.1.5",
+    "jsonwebtoken": "^9.0.0",
+    "multer": "^1.4.5-lts.1",
+    "pg": "^8.10.0",
+    "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "concurrently": "^7.6.0",
+    "nodemon": "^2.0.22"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

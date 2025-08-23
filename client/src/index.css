@@ -1,0 +1,516 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200;
+  }
+  
+  .btn-primary {
+    @apply btn bg-primary-600 text-white hover:bg-primary-700 focus:ring-primary-500;
+  }
+  
+  .btn-secondary {
+    @apply btn bg-white text-gray-700 border-gray-300 hover:bg-gray-50 focus:ring-primary-500;
+  }
+  
+  .btn-success {
+    @apply btn bg-success-600 text-white hover:bg-success-700 focus:ring-success-500;
+  }
+  
+  .btn-error {
+    @apply btn bg-error-600 text-white hover:bg-error-700 focus:ring-error-500;
+  }
+  
+  .input {
+    @apply block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-soft border border-gray-200;
+  }
+  
+  .card-header {
+    @apply px-6 py-4 border-b border-gray-200;
+  }
+  
+  .card-body {
+    @apply px-6 py-4;
+  }
+  
+  .emoji-scale {
+    @apply flex items-center justify-center space-x-2;
+  }
+  
+  .custom-emoji-scale {
+    @apply flex items-center justify-center space-x-4;
+  }
+  
+  .emoji-option {
+    @apply flex flex-col items-center p-3 rounded-lg cursor-pointer transition-all duration-200 relative;
+  }
+  
+  .emoji-option.selected {
+    @apply scale-110;
+  }
+  
+  .emoji-option img {
+    @apply w-12 h-12 object-contain mb-2;
+  }
+  
+  .emoji-option span {
+    @apply text-xs text-gray-600 text-center font-bold;
+  }
+  
+  .emoji-container {
+    @apply flex items-center justify-center;
+  }
+  
+  .emoji-container svg {
+    @apply transition-all duration-200;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  }
+  
+  .emoji-option:hover .emoji-container svg {
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  }
+  
+  .emoji-option.selected .emoji-container svg {
+    filter: drop-shadow(0 6px 12px rgba(0,0,0,0.3));
+  }
+
+  /* Enhanced emoji styling */
+  .emoji-option .emoji-text {
+    @apply text-4xl font-black leading-none;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+  }
+
+  .emoji-option:hover .emoji-text {
+    transform: scale(1.1);
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+  }
+
+  .emoji-option.selected .emoji-text {
+    transform: scale(1.15);
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  }
+  
+  .survey-builder {
+    @apply min-h-screen bg-gray-50;
+  }
+  
+  .survey-preview {
+    @apply max-w-2xl mx-auto bg-white rounded-lg shadow-medium p-8;
+  }
+  
+  .question-card {
+    @apply card mb-6;
+  }
+  
+  .question-header {
+    @apply flex items-center justify-between;
+  }
+  
+  .question-type-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  
+  .question-type-emoji {
+    @apply question-type-badge bg-yellow-100 text-yellow-800;
+  }
+  
+  .question-type-multiple {
+    @apply question-type-badge bg-blue-100 text-blue-800;
+  }
+  
+  .question-type-text {
+    @apply question-type-badge bg-green-100 text-green-800;
+  }
+  
+  .question-type-likert {
+    @apply question-type-badge bg-purple-100 text-purple-800;
+  }
+  
+  .analytics-card {
+    @apply card p-6;
+  }
+  
+  .analytics-stat {
+    @apply text-center;
+  }
+  
+  .analytics-stat-value {
+    @apply text-3xl font-bold text-gray-900;
+  }
+  
+  .analytics-stat-label {
+    @apply text-sm text-gray-500 mt-1;
+  }
+  
+  .chart-container {
+    @apply w-full h-64;
+  }
+  
+  .drag-handle {
+    @apply cursor-move text-gray-400 hover:text-gray-600;
+  }
+  
+  .drop-zone {
+    @apply border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-primary-300 hover:bg-primary-50 transition-colors duration-200;
+  }
+  
+  .drop-zone.active {
+    @apply border-primary-500 bg-primary-50;
+  }
+
+  .emoji-scale-container {
+    @apply flex flex-col items-center;
+  }
+
+  .recommendation-scale {
+    @apply w-full max-w-4xl mx-auto p-4;
+  }
+
+  .recommendation-scale button {
+    @apply transition-all duration-200;
+  }
+
+  .recommendation-scale button:hover {
+    @apply transform scale-110;
+  }
+
+  .recommendation-scale button:active {
+    @apply transform scale-95;
+  }
+}
+
+@layer utilities {
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent;
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  .animate-bounce-in {
+    animation: bounceIn 0.6s ease-out;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400;
+}
+
+/* Loading spinner */
+.spinner {
+  @apply animate-spin rounded-full border-2 border-gray-300 border-t-primary-600;
+}
+
+/* Emoji scale animations */
+.emoji-scale-enter {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.emoji-scale-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.emoji-scale-exit {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.emoji-scale-exit-active {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* GLICO Survey Background */
+.glico-survey-bg {
+  background: 
+    linear-gradient(135deg, 
+      rgba(220, 38, 38, 0.05) 0%, 
+      rgba(59, 130, 246, 0.05) 50%, 
+      rgba(16, 185, 129, 0.05) 100%
+    ),
+    linear-gradient(45deg, 
+      rgba(0, 0, 0, 0.02) 0%, 
+      rgba(0, 0, 0, 0.01) 100%
+    );
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+
+.glico-survey-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 80%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* Recommendation Scale SVG Styles */
+.rating-scale-svg {
+  text-align: center;
+  background-color: #f8f9fa;
+  padding: 28px 20px;
+  border-radius: 16px;
+  border: 1px solid #e9ecef;
+  margin: 24px 0;
+  color: #333;
+}
+
+.faces {
+  display: flex;
+  justify-content: space-between;
+  max-width: 800px;
+  margin: 0 auto;
+  gap: 12px;
+  flex-wrap: nowrap;
+  padding: 24px 16px;
+  align-items: flex-start;
+}
+
+@media (max-width: 768px) {
+  .faces {
+    gap: 6px;
+    max-width: 100%;
+    padding: 16px 8px;
+    flex-wrap: wrap;
+  }
+  
+  .face-item {
+    padding: 8px 4px;
+    margin: 2px;
+    min-width: 50px;
+    max-width: none;
+    flex: 0 0 auto;
+  }
+  
+  .emoji-container svg {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .number {
+    font-size: 14px;
+    margin-top: 4px;
+    font-weight: 700;
+  }
+  
+  .labels {
+    font-size: 12px;
+    flex-direction: row;
+    gap: 4px;
+    margin: 12px auto 0;
+    padding: 0 8px;
+    color: #333;
+  }
+  
+  .labels .label {
+    padding: 6px 8px;
+    margin: 0 2px;
+    font-weight: 700;
+    font-size: 12px;
+  }
+  
+  .rating-scale-svg {
+    padding: 16px 12px;
+    margin: 16px 0;
+    background-color: #f8f9fa;
+    color: #333;
+  }
+}
+
+@media (max-width: 480px) {
+  .faces {
+    gap: 4px;
+    padding: 12px 4px;
+  }
+  
+  .face-item {
+    padding: 6px 2px;
+    min-width: 40px;
+  }
+  
+  .emoji-container svg {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .number {
+    font-size: 12px;
+    margin-top: 3px;
+  }
+  
+  .labels {
+    font-size: 11px;
+    padding: 0 4px;
+  }
+  
+  .labels .label {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+}
+
+.face-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: all 0.2s ease;
+  padding: 12px 8px;
+  border-radius: 12px;
+  margin: 0;
+  min-width: 60px;
+  flex: 1;
+  max-width: 80px;
+}
+
+.face-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.face-item.selected {
+  background-color: rgba(0, 0, 0, 0.08);
+  transform: scale(1.08);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.emoji-container {
+  position: relative;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.emoji-container svg {
+  transition: all 0.2s ease;
+  width: 44px;
+  height: 44px;
+}
+
+.face-item:hover .emoji-container svg {
+  transform: scale(1.1);
+}
+
+.selection-indicator {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 20px;
+  height: 20px;
+  background-color: #4caf50;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.number {
+  font-size: 16px;
+  font-weight: 700;
+  margin-top: 6px;
+  text-shadow: none;
+  text-align: center;
+  line-height: 1;
+}
+
+.labels {
+  display: flex;
+  justify-content: space-between;
+  max-width: 800px;
+  margin: 20px auto 0;
+  font-size: 16px;
+  font-weight: 700;
+  align-items: center;
+  padding: 0 16px;
+  color: #333;
+}
+
+.labels .label {
+  flex: 1;
+  text-align: center;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-weight: 700;
+  margin: 0 4px;
+  text-shadow: none;
+  font-size: 14px;
+}
+
+.label {
+  flex: 1;
+  text-align: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.label.red { 
+  color: #e53e3e; 
+  background-color: rgba(229, 62, 62, 0.1);
+}
+
+.label.orange { 
+  color: #f6ad55; 
+  background-color: rgba(246, 173, 85, 0.1);
+}
+
+.label.green { 
+  color: #38a169; 
+  background-color: rgba(56, 161, 105, 0.1);
+} 
+
+/* Custom utility classes */
+.grid-cols-24 {
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+} 
