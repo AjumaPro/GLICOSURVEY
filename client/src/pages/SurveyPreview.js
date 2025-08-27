@@ -125,13 +125,14 @@ const SurveyPreview = () => {
   const renderQuestionContent = (question) => {
     const currentResponse = responses[question.id];
 
-    switch (question.type) {
+    const questionType = question.type || question.question_type;
+    switch (questionType) {
       case 'emoji_scale':
       case 'likert_scale':
         return (
           <div className="space-y-4">
             <EmojiScale
-              options={question.options}
+              options={question.options || []}
               value={currentResponse}
               onChange={(value) => handleResponse(question.id, value)}
             />
@@ -148,7 +149,7 @@ const SurveyPreview = () => {
       case 'multiple_choice':
         return (
           <div className="space-y-3">
-            {question.options.map((option, index) => (
+            {(question.options || []).map((option, index) => (
               <label
                 key={index}
                 className="flex items-center p-4 border border-gray-200 rounded-lg cursor-pointer hover:border-primary-300 hover:bg-primary-50 transition-colors"
@@ -505,7 +506,7 @@ const SurveyPreview = () => {
                       </h3>
                       <div className="flex items-center space-x-2">
                         <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                          {question.type.replace('_', ' ')}
+                          {(question.type || question.question_type || 'unknown').replace('_', ' ')}
                         </span>
                         {question.required && (
                           <span className="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">
@@ -517,7 +518,7 @@ const SurveyPreview = () => {
                     
                     <div className="mb-4">
                       <h4 className="text-lg font-medium text-gray-900 mb-2">
-                        {question.title}
+                        {question.title || question.question_text || 'Untitled Question'}
                       </h4>
                       {question.description && (
                         <p className="text-gray-600">{question.description}</p>

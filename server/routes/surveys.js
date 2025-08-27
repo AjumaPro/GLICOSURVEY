@@ -162,7 +162,13 @@ router.get('/:id', async (req, res) => {
       [id]
     );
 
-    survey.questions = questionsResult.rows;
+    // Transform question data to match frontend expectations
+    survey.questions = questionsResult.rows.map(question => ({
+      ...question,
+      type: question.question_type,
+      title: question.question_text,
+      options: typeof question.options === 'string' ? JSON.parse(question.options) : question.options
+    }));
 
     res.json(survey);
   } catch (error) {
