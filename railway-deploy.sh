@@ -1,11 +1,10 @@
 #!/bin/bash
 
-# Railway Deployment Script for GLICO Survey
-# This script ensures both client and server are properly built and deployed
+# 🚂 Railway Deployment Script for GLICO Survey
+# This script helps you deploy your app to Railway
 
-set -e  # Exit on any error
-
-echo "🚂 Starting Railway deployment for GLICO Survey..."
+echo "🚂 GLICO Survey Railway Deployment Script"
+echo "=========================================="
 
 # Colors for output
 RED='\033[0;31m'
@@ -16,122 +15,94 @@ NC='\033[0m' # No Color
 
 # Function to print colored output
 print_status() {
-    echo -e "${BLUE}📋 $1${NC}"
+    echo -e "${BLUE}[INFO]${NC} $1"
 }
 
 print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}[WARNING]${NC} $1"
 }
 
 print_error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Check if we're in the right directory
-if [ ! -f "package.json" ]; then
-    print_error "package.json not found. Please run this script from the project root."
+# Check if git is initialized
+if [ ! -d ".git" ]; then
+    print_error "Git repository not initialized. Please run: git init"
     exit 1
 fi
 
-print_status "Verifying project structure..."
-
-# Check for required directories
-if [ ! -d "client" ]; then
-    print_error "Client directory not found!"
+# Check if there are uncommitted changes
+if [ -n "$(git status --porcelain)" ]; then
+    print_warning "You have uncommitted changes. Please commit them first:"
+    echo "  git add ."
+    echo "  git commit -m 'Your commit message'"
     exit 1
 fi
 
-if [ ! -d "server" ]; then
-    print_error "Server directory not found!"
+print_status "Starting Railway deployment process..."
+
+# Step 1: Build the application
+print_status "Step 1: Building the application..."
+npm run build:full
+
+if [ $? -eq 0 ]; then
+    print_success "Build completed successfully!"
+else
+    print_error "Build failed. Please check the errors above."
     exit 1
 fi
 
-print_success "Project structure verified"
-
-# Install dependencies
-print_status "Installing dependencies..."
-npm run install-all
-print_success "Dependencies installed"
-
-# Build client
-print_status "Building React client..."
-npm run build
-print_success "Client build completed"
-
-# Verify client build
-if [ ! -d "client/build" ]; then
-    print_error "Client build directory not found!"
-    exit 1
+# Step 2: Check if Railway CLI is installed
+if ! command -v railway &> /dev/null; then
+    print_warning "Railway CLI not found. Installing..."
+    npm install -g @railway/cli
 fi
 
-print_success "Client build verified"
-
-# Check server files
-print_status "Verifying server files..."
-if [ ! -f "server/index.js" ]; then
-    print_error "Server index.js not found!"
-    exit 1
+# Step 3: Login to Railway (if not already logged in)
+print_status "Step 2: Checking Railway login status..."
+if ! railway whoami &> /dev/null; then
+    print_status "Please login to Railway..."
+    railway login
 fi
 
-print_success "Server files verified"
+# Step 4: Link to Railway project (if not already linked)
+if [ ! -f ".railway" ]; then
+    print_status "Step 3: Linking to Railway project..."
+    railway link
+fi
 
-# Create production build verification
-print_status "Creating production build verification..."
+# Step 5: Deploy to Railway
+print_status "Step 4: Deploying to Railway..."
+railway up
 
-# Check if all required files exist
-REQUIRED_FILES=(
-    "package.json"
-    "railway.json"
-    "Procfile"
-    "server/index.js"
-    "client/build/index.html"
-    "client/build/static"
-)
-
-for file in "${REQUIRED_FILES[@]}"; do
-    if [ ! -e "$file" ]; then
-        print_error "Required file/directory not found: $file"
-        exit 1
+if [ $? -eq 0 ]; then
+    print_success "Deployment completed successfully!"
+    
+    # Get the deployment URL
+    DEPLOY_URL=$(railway status --json | grep -o '"url":"[^"]*"' | cut -d'"' -f4)
+    
+    if [ -n "$DEPLOY_URL" ]; then
+        print_success "Your app is deployed at: $DEPLOY_URL"
+        print_status "API Health Check: $DEPLOY_URL/api/health"
     fi
-done
+    
+    print_status "Next steps:"
+    echo "1. Go to Railway dashboard to configure environment variables"
+    echo "2. Add PostgreSQL database service"
+    echo "3. Run database setup commands in Railway shell:"
+    echo "   - npm run setup-db"
+    echo "   - npm run migrate"
+    echo "   - npm run create-admin"
+    echo "   - npm run create-guest"
+    
+else
+    print_error "Deployment failed. Please check the errors above."
+    exit 1
+fi
 
-print_success "All required files verified"
-
-# Create deployment summary
-print_status "Creating deployment summary..."
-
-echo ""
-echo "🎯 Railway Deployment Summary"
-echo "=============================="
-echo "✅ Client: React app built and ready"
-echo "✅ Server: Node.js/Express server ready"
-echo "✅ Database: PostgreSQL configuration ready"
-echo "✅ Static Files: Client build files included"
-echo "✅ Health Check: /api/health endpoint available"
-echo "✅ CORS: Configured for Railway domains"
-echo "✅ Environment: Production-ready configuration"
-echo ""
-
-# Display important information
-print_warning "Important Railway Configuration:"
-echo "1. Add PostgreSQL database in Railway dashboard"
-echo "2. Set environment variables (see env.railway)"
-echo "3. Run database setup after deployment:"
-echo "   npm run railway:setup"
-echo ""
-
-print_success "Railway deployment preparation completed!"
-echo ""
-echo "🚀 Next steps:"
-echo "1. Push to GitHub: git push origin main"
-echo "2. Deploy on Railway: Connect GitHub repo"
-echo "3. Add PostgreSQL database"
-echo "4. Configure environment variables"
-echo "5. Run database setup commands"
-echo ""
-
-print_success "GLICO Survey is ready for Railway deployment! 🎉" 
+print_success "Railway deployment script completed!" 
