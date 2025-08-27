@@ -145,7 +145,7 @@ router.get('/:id', async (req, res) => {
       `SELECT s.*, COUNT(DISTINCT r.session_id) as responses_count
        FROM surveys s
        LEFT JOIN responses r ON s.id = r.survey_id
-       WHERE s.id = $1 AND s.is_deleted = false
+       WHERE s.id = ? AND s.is_deleted = 0
        GROUP BY s.id`,
       [id]
     );
@@ -158,7 +158,7 @@ router.get('/:id', async (req, res) => {
 
     // Get questions for this survey (excluding soft deleted)
     const questionsResult = await query(
-      'SELECT * FROM questions WHERE survey_id = $1 AND is_deleted = false ORDER BY order_index ASC',
+      'SELECT * FROM questions WHERE survey_id = ? AND is_deleted = 0 ORDER BY order_index ASC',
       [id]
     );
 
@@ -182,7 +182,7 @@ router.post('/', auth, async (req, res) => {
     // Create the survey
     const surveyResult = await query(
       `INSERT INTO surveys (title, description, user_id, theme, settings)
-       VALUES ($1, $2, $3, $4, $5)
+       VALUES (?, ?, ?, ?, ?)
        RETURNING *`,
       [title, description, req.user.id, JSON.stringify(theme || {}), JSON.stringify(settings || {})]
     );
@@ -195,7 +195,7 @@ router.post('/', auth, async (req, res) => {
         const question = questions[i];
         await query(
           `INSERT INTO questions (survey_id, type, title, description, required, options, settings, order_index)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             survey.id,
             question.type,
@@ -213,7 +213,7 @@ router.post('/', auth, async (req, res) => {
     // Create initial version
     await query(
       `INSERT INTO survey_versions (survey_id, version_number, title, description, theme, settings, questions_data, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         survey.id,
         1,
