@@ -100,7 +100,7 @@ router.get('/public/:id', async (req, res) => {
     
     // Get survey with questions (only if published and not deleted)
     const surveyResult = await query(
-      `SELECT s.*, u.name as author_name
+      `SELECT s.*, u.full_name as author_name
        FROM surveys s
        JOIN users u ON s.user_id = u.id
        WHERE s.id = ? AND s.status = 'published' AND s.is_deleted = 0`,
@@ -115,7 +115,7 @@ router.get('/public/:id', async (req, res) => {
 
     // Get questions
     const questionsResult = await query(
-      `SELECT id, type, title, description, required, options, settings, order_index
+      `SELECT id, question_type, question_text, required, options, order_index
        FROM questions 
        WHERE survey_id = ? AND is_deleted = 0
        ORDER BY order_index ASC`,
@@ -124,8 +124,9 @@ router.get('/public/:id', async (req, res) => {
 
     survey.questions = questionsResult.rows.map(q => ({
       ...q,
-      options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options,
-      settings: typeof q.settings === 'string' ? JSON.parse(q.settings) : q.settings
+      type: q.question_type,
+      title: q.question_text,
+      options: typeof q.options === 'string' ? JSON.parse(q.options) : q.options
     }));
 
     res.json(survey);
