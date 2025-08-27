@@ -11,6 +11,12 @@ if (!fs.existsSync(uploadsDir)) {
 // Database file path
 const dbPath = process.env.DATABASE_URL || path.join(__dirname, '..', '..', 'glico_survey.db');
 
+// Ensure the directory for the database file exists
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+  fs.mkdirSync(dbDir, { recursive: true });
+}
+
 // Initialize database
 const db = new Database(dbPath, { verbose: console.log });
 
