@@ -133,7 +133,7 @@ router.get('/', auth, async (req, res) => {
     const systemTemplatesResult = await query(
       `SELECT id, name, description, category, template_data, is_public, created_at, updated_at
        FROM survey_templates 
-       WHERE is_deleted = false
+       WHERE is_deleted = 0
        ORDER BY name ASC`
     );
 
@@ -141,7 +141,7 @@ router.get('/', auth, async (req, res) => {
     const customTemplatesResult = await query(
       `SELECT id, name, description, category, template_data, is_public, created_by, created_at, updated_at
        FROM custom_templates 
-       WHERE is_deleted = false AND (created_by = $1 OR is_public = true)
+       WHERE is_deleted = 0 AND (created_by = ? OR is_public = 1)
        ORDER BY name ASC`,
       [req.user.id]
     );
@@ -165,7 +165,7 @@ router.get('/system', auth, async (req, res) => {
     const result = await query(
       `SELECT id, name, description, category, template_data, is_public, created_at, updated_at
        FROM survey_templates 
-       WHERE is_deleted = false
+       WHERE is_deleted = 0
        ORDER BY name ASC`
     );
     
@@ -183,7 +183,7 @@ router.get('/custom', auth, async (req, res) => {
     const result = await query(
       `SELECT id, name, description, category, template_data, is_public, created_by, created_at, updated_at
        FROM custom_templates 
-       WHERE is_deleted = false AND (created_by = $1 OR is_public = true)
+       WHERE is_deleted = 0 AND (created_by = ? OR is_public = 1)
        ORDER BY name ASC`,
       [req.user.id]
     );
@@ -205,7 +205,7 @@ router.get('/:id', auth, async (req, res) => {
     let result = await query(
       `SELECT id, name, description, category, template_data, is_public, created_at, updated_at
        FROM survey_templates 
-       WHERE id = $1 AND is_deleted = false`,
+       WHERE id = ? AND is_deleted = 0`,
       [id]
     );
 
@@ -218,7 +218,7 @@ router.get('/:id', auth, async (req, res) => {
     result = await query(
       `SELECT id, name, description, category, template_data, is_public, created_by, created_at, updated_at
        FROM custom_templates 
-       WHERE id = $1 AND is_deleted = false AND (created_by = $2 OR is_public = true)`,
+       WHERE id = ? AND is_deleted = 0 AND (created_by = ? OR is_public = 1)`,
       [id, req.user.id]
     );
 

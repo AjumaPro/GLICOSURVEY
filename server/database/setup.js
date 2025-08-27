@@ -135,6 +135,7 @@ const setupDatabase = async () => {
         description TEXT,
         category TEXT,
         template_data TEXT NOT NULL,
+        is_public INTEGER DEFAULT 0,
         is_deleted INTEGER DEFAULT 0,
         deleted_at TEXT,
         deleted_by INTEGER,

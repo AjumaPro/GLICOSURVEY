@@ -18,9 +18,9 @@ router.get('/', auth, async (req, res) => {
                 COUNT(DISTINCT r.session_id) as responses_count
          FROM surveys s
          LEFT JOIN users u ON s.user_id = u.id
-         LEFT JOIN questions q ON s.id = q.survey_id AND q.is_deleted = false
+         LEFT JOIN questions q ON s.id = q.survey_id AND q.is_deleted = 0
          LEFT JOIN responses r ON s.id = r.survey_id
-         WHERE s.is_deleted = false
+         WHERE s.is_deleted = 0
          GROUP BY s.id, u.name
          ORDER BY s.updated_at DESC
       `;
@@ -33,7 +33,7 @@ router.get('/', auth, async (req, res) => {
          FROM surveys s
          LEFT JOIN questions q ON s.id = q.survey_id AND q.is_deleted = false
          LEFT JOIN responses r ON s.id = r.survey_id
-         WHERE s.user_id = $1 AND s.is_deleted = false
+         WHERE s.user_id = ? AND s.is_deleted = 0
          GROUP BY s.id
          ORDER BY s.updated_at DESC
       `;
@@ -65,7 +65,7 @@ router.get('/deleted', auth, async (req, res) => {
          LEFT JOIN users u ON s.user_id = u.id
          LEFT JOIN questions q ON s.id = q.survey_id AND q.is_deleted = false
          LEFT JOIN responses r ON s.id = r.survey_id
-         WHERE s.is_deleted = true
+         WHERE s.is_deleted = 1
          GROUP BY s.id, u.name
          ORDER BY s.deleted_at DESC
       `;
@@ -76,9 +76,9 @@ router.get('/deleted', auth, async (req, res) => {
                 COUNT(q.id) as question_count,
                 COUNT(DISTINCT r.session_id) as responses_count
          FROM surveys s
-         LEFT JOIN questions q ON s.id = q.survey_id AND q.is_deleted = false
+         LEFT JOIN questions q ON s.id = q.survey_id AND q.is_deleted = 0
          LEFT JOIN responses r ON s.id = r.survey_id
-         WHERE s.user_id = $1 AND s.is_deleted = true
+         WHERE s.user_id = ? AND s.is_deleted = 1
          GROUP BY s.id
          ORDER BY s.deleted_at DESC
       `;
@@ -103,7 +103,7 @@ router.get('/public/:id', async (req, res) => {
       `SELECT s.*, u.name as author_name
        FROM surveys s
        JOIN users u ON s.user_id = u.id
-       WHERE s.id = $1 AND s.status = 'published' AND s.is_deleted = false`,
+       WHERE s.id = ? AND s.status = 'published' AND s.is_deleted = 0`,
       [id]
     );
 
@@ -117,7 +117,7 @@ router.get('/public/:id', async (req, res) => {
     const questionsResult = await query(
       `SELECT id, type, title, description, required, options, settings, order_index
        FROM questions 
-       WHERE survey_id = $1 AND is_deleted = false
+       WHERE survey_id = ? AND is_deleted = 0
        ORDER BY order_index ASC`,
       [id]
     );

@@ -8,7 +8,7 @@ const auth = require('../middleware/auth');
 const requireAdmin = async (req, res, next) => {
   try {
     const userResult = await query(
-      'SELECT role FROM users WHERE id = $1',
+      'SELECT role FROM users WHERE id = ?',
       [req.user.id]
     );
 
@@ -27,7 +27,7 @@ const requireAdmin = async (req, res, next) => {
 const requireSuperAdmin = async (req, res, next) => {
   try {
     const userResult = await query(
-      'SELECT role FROM users WHERE id = $1',
+      'SELECT role FROM users WHERE id = ?',
       [req.user.id]
     );
 
