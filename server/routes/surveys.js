@@ -187,10 +187,10 @@ router.post('/', auth, async (req, res) => {
 
     // Create the survey
     await query(
-      `INSERT INTO surveys (title, description, user_id, theme, settings)
-       VALUES (?, ?, ?, ?, ?)
+      `INSERT INTO surveys (title, description, user_id, theme, settings, questions_data)
+       VALUES (?, ?, ?, ?, ?, ?)
        `,
-      [title, description, req.user.id, JSON.stringify(theme || {}), JSON.stringify(settings || {})]
+      [title, description, req.user.id, JSON.stringify(theme || {}), JSON.stringify(settings || {}), JSON.stringify(questions || [])]
     );
 
     // Get the created survey (SQLite3 doesn't support RETURNING)
@@ -204,16 +204,14 @@ router.post('/', auth, async (req, res) => {
       for (let i = 0; i < questions.length; i++) {
         const question = questions[i];
         await query(
-          `INSERT INTO questions (survey_id, question_type, question_text, description, required, options, settings, order_index)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          `INSERT INTO questions (survey_id, question_type, question_text, required, options, order_index)
+           VALUES (?, ?, ?, ?, ?, ?)`,
           [
             survey.id,
             question.question_type,
             question.question_text,
-            question.description || '',
             question.required || false,
             JSON.stringify(question.options || []),
-            JSON.stringify(question.settings || {}),
             i
           ]
         );
