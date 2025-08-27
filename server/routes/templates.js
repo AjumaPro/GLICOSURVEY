@@ -273,7 +273,7 @@ router.post('/:id/create', auth, async (req, res) => {
       
       // Search in system templates by category
       let templateResult = await query(
-        `SELECT * FROM survey_templates WHERE category ILIKE $1 AND is_deleted = false`,
+        `SELECT * FROM survey_templates WHERE LOWER(category) LIKE LOWER(?) AND is_deleted = 0`,
         [`%${searchTerm}%`]
       );
       
@@ -282,7 +282,7 @@ router.post('/:id/create', auth, async (req, res) => {
       } else {
         // Search in custom templates by category
         templateResult = await query(
-          `SELECT * FROM custom_templates WHERE category ILIKE $1 AND is_deleted = false AND (created_by = $2 OR is_public = true)`,
+          `SELECT * FROM custom_templates WHERE LOWER(category) LIKE LOWER(?) AND is_deleted = 0 AND (created_by = ? OR is_public = 1)`,
           [`%${searchTerm}%`, req.user.id]
         );
         
@@ -421,7 +421,7 @@ router.post('/:id/customize', auth, async (req, res) => {
       
       // Search in system templates by category
       let templateResult = await query(
-        `SELECT * FROM survey_templates WHERE category ILIKE $1 AND is_deleted = false`,
+        `SELECT * FROM survey_templates WHERE LOWER(category) LIKE LOWER(?) AND is_deleted = 0`,
         [`%${searchTerm}%`]
       );
       
@@ -430,7 +430,7 @@ router.post('/:id/customize', auth, async (req, res) => {
       } else {
         // Search in custom templates by category
         templateResult = await query(
-          `SELECT * FROM custom_templates WHERE category ILIKE $1 AND is_deleted = false AND (created_by = $2 OR is_public = true)`,
+          `SELECT * FROM custom_templates WHERE LOWER(category) LIKE LOWER(?) AND is_deleted = 0 AND (created_by = ? OR is_public = 1)`,
           [`%${searchTerm}%`, req.user.id]
         );
         
@@ -543,8 +543,8 @@ router.put('/:id', auth, async (req, res) => {
     // Update template
     const result = await query(
       `UPDATE custom_templates 
-       SET name = $1, description = $2, category = $3, template_data = $4, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $5
+       SET name = ?, description = ?, category = ?, template_data = ?, updated_at = datetime('now')
+                WHERE id = ?
        RETURNING *`,
       [
         title.trim(),
@@ -611,7 +611,7 @@ router.post('/:id/duplicate', auth, async (req, res) => {
       
       // Search in system templates by category
       let templateResult = await query(
-        `SELECT * FROM survey_templates WHERE category ILIKE $1 AND is_deleted = false`,
+        `SELECT * FROM survey_templates WHERE LOWER(category) LIKE LOWER(?) AND is_deleted = 0`,
         [`%${searchTerm}%`]
       );
       
@@ -620,7 +620,7 @@ router.post('/:id/duplicate', auth, async (req, res) => {
       } else {
         // Search in custom templates by category
         templateResult = await query(
-          `SELECT * FROM custom_templates WHERE category ILIKE $1 AND is_deleted = false AND (created_by = $2 OR is_public = true)`,
+          `SELECT * FROM custom_templates WHERE LOWER(category) LIKE LOWER(?) AND is_deleted = 0 AND (created_by = ? OR is_public = 1)`,
           [`%${searchTerm}%`, req.user.id]
         );
         
@@ -681,8 +681,8 @@ router.delete('/:id', auth, async (req, res) => {
     // Soft delete template
     await query(
       `UPDATE custom_templates 
-       SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP, deleted_by = $1
-       WHERE id = $2`,
+       SET is_deleted = 1, deleted_at = datetime('now'), deleted_by = ?
+       WHERE id = ?`,
       [req.user.id, id]
     );
     

@@ -15,8 +15,8 @@
 - [ ] Initial deployment completed
 
 ### **Database Setup**
-- [ ] PostgreSQL database provisioned
-- [ ] DATABASE_URL configured
+- [ ] SQLite3 database will be created automatically
+- [ ] DATABASE_URL can be left empty for default database file
 - [ ] Database setup commands run:
   - [ ] `npm run setup-db`
   - [ ] `npm run migrate`
@@ -72,7 +72,7 @@ npm run create-guest
 ```bash
 NODE_ENV=production
 PORT=5000
-DATABASE_URL=postgresql://...
+DATABASE_URL=./glico_survey.db
 JWT_SECRET=your-secure-jwt-secret
 SESSION_SECRET=your-secure-session-secret
 COOKIE_SECRET=your-secure-cookie-secret

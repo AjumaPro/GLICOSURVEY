@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Database Setup Script for GLICO Survey Application
+# Database Setup Script for GLICO Survey Application (SQLite3)
 
 set -e
 
-echo "🗄️ Setting up PostgreSQL database for GLICO Survey Application..."
+echo "🗄️ Setting up SQLite3 database for GLICO Survey Application..."
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -24,25 +24,25 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Check if PostgreSQL is running
-if ! pg_isready -q; then
-    print_error "PostgreSQL is not running. Please start PostgreSQL first."
+# Check if Node.js is installed
+if ! command -v node &> /dev/null; then
+    print_error "Node.js is not installed. Please install Node.js first."
     exit 1
 fi
 
-print_status "PostgreSQL is running"
+print_status "Node.js is available"
 
-# Create database user (if it doesn't exist)
-print_status "Creating database user..."
-sudo -u postgres psql -c "CREATE USER glico_user WITH PASSWORD 'your_secure_password';" 2>/dev/null || print_warning "User glico_user already exists"
+# Check if npm is installed
+if ! command -v npm &> /dev/null; then
+    print_error "npm is not installed. Please install npm first."
+    exit 1
+fi
 
-# Create database
-print_status "Creating database..."
-sudo -u postgres psql -c "CREATE DATABASE glico_survey_db OWNER glico_user;" 2>/dev/null || print_warning "Database glico_survey_db already exists"
+print_status "npm is available"
 
-# Grant privileges
-print_status "Granting privileges..."
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE glico_survey_db TO glico_user;"
+# Install dependencies
+print_status "Installing dependencies..."
+npm install
 
 # Run database setup
 print_status "Running database setup..."
@@ -64,9 +64,9 @@ print_status "Database setup completed successfully!"
 
 echo ""
 echo "📋 Database Configuration:"
-echo "   - Database: glico_survey_db"
-echo "   - User: glico_user"
-echo "   - Password: your_secure_password (CHANGE THIS!)"
+echo "   - Database: glico_survey.db (SQLite3)"
+echo "   - Location: ./glico_survey.db"
+echo "   - No additional setup required"
 echo ""
 echo "🔐 Admin credentials:"
 echo "   - Email: admin@glico.com"
@@ -77,5 +77,7 @@ echo "   - Email: guest@glico.com"
 echo "   - Password: guest123"
 echo "   - Full access to all features"
 echo ""
-echo "⚠️  IMPORTANT: Change the database password and admin password in production!"
-echo "" 
+echo "⚠️  IMPORTANT: Change the admin password in production!"
+echo ""
+echo "🚀 To start the application:"
+echo "   npm run dev" 
