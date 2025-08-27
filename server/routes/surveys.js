@@ -177,16 +177,20 @@ router.post('/', auth, async (req, res) => {
     const { title, description, theme, settings, questions } = req.body;
 
     // Start a transaction
-    await query('BEGIN');
+    // SQLite3 transactions are handled differently
 
     // Create the survey
-    const surveyResult = await query(
+    await query(
       `INSERT INTO surveys (title, description, user_id, theme, settings)
        VALUES (?, ?, ?, ?, ?)
-       RETURNING *`,
+       `,
       [title, description, req.user.id, JSON.stringify(theme || {}), JSON.stringify(settings || {})]
     );
 
+    // Get the created survey (SQLite3 doesn't support RETURNING)
+    const surveyResult = await query(
+      'SELECT * FROM surveys WHERE id = last_insert_rowid()'
+    );
     const survey = surveyResult.rows[0];
 
     // Create questions if provided
@@ -198,8 +202,8 @@ router.post('/', auth, async (req, res) => {
            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             survey.id,
-            question.type,
-            question.title,
+            question.question_type,
+            question.question_text,
             question.description || '',
             question.required || false,
             JSON.stringify(question.options || []),
@@ -226,11 +230,11 @@ router.post('/', auth, async (req, res) => {
       ]
     );
 
-    await query('COMMIT');
+    // SQLite3 transactions are handled differently
 
     res.status(201).json(survey);
   } catch (error) {
-    await query('ROLLBACK');
+    // SQLite3 transactions are handled differently
     console.error('Error creating survey:', error);
     res.status(500).json({ error: 'Failed to create survey' });
   }
@@ -244,7 +248,7 @@ router.put('/:id', auth, async (req, res) => {
 
     // Check if survey belongs to user and is not deleted
     const surveyCheck = await query(
-      'SELECT id, title FROM surveys WHERE id = $1 AND user_id = $2 AND is_deleted = false',
+      'SELECT id, title FROM surveys WHERE id = ? AND user_id = ? AND is_deleted = 0',
       [id, req.user.id]
     );
 
@@ -253,14 +257,14 @@ router.put('/:id', auth, async (req, res) => {
     }
 
     // Start a transaction
-    await query('BEGIN');
+    // SQLite3 transactions are handled differently
 
     // Update survey with validation
-    const surveyResult = await query(
+    await query(
       `UPDATE surveys 
-       SET title = $1, description = $2, theme = $3, settings = $4, status = $5, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $6
-       RETURNING *`,
+       SET title = ?, description = ?, theme = ?, settings = ?, status = ?, updated_at = datetime('now')
+       WHERE id = ?
+       `,
       [
         title || surveyCheck.rows[0].title || 'Untitled Survey', 
         description || '', 
@@ -271,21 +275,27 @@ router.put('/:id', auth, async (req, res) => {
       ]
     );
 
+    // Get the updated survey (SQLite3 doesn't support RETURNING)
+    const surveyResult = await query(
+      'SELECT * FROM surveys WHERE id = ?',
+      [id]
+    );
+
     // Update questions if provided
     if (questions && Array.isArray(questions)) {
       // Soft delete existing questions
-      await query('UPDATE questions SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP WHERE survey_id = $1', [id]);
+      await query('UPDATE questions SET is_deleted = 1, deleted_at = datetime(\'now\') WHERE survey_id = ?', [id]);
 
       // Insert new questions
       for (let i = 0; i < questions.length; i++) {
         const question = questions[i];
         await query(
           `INSERT INTO questions (survey_id, type, title, description, required, options, settings, order_index)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             id,
-            question.type,
-            question.title,
+            question.question_type,
+            question.question_text,
             question.description || '',
             question.required || false,
             JSON.stringify(question.options || []),
@@ -298,14 +308,14 @@ router.put('/:id', auth, async (req, res) => {
 
     // Create new version
     const versionResult = await query(
-      'SELECT COALESCE(MAX(version_number), 0) + 1 as next_version FROM survey_versions WHERE survey_id = $1',
+      'SELECT COALESCE(MAX(version_number), 0) + 1 as next_version FROM survey_versions WHERE survey_id = ?',
       [id]
     );
     const nextVersion = versionResult.rows[0].next_version;
 
     await query(
       `INSERT INTO survey_versions (survey_id, version_number, title, description, theme, settings, questions_data, created_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         nextVersion,
@@ -318,11 +328,11 @@ router.put('/:id', auth, async (req, res) => {
       ]
     );
 
-    await query('COMMIT');
+    // SQLite3 transactions are handled differently
 
     res.json(surveyResult.rows[0]);
   } catch (error) {
-    await query('ROLLBACK');
+    // SQLite3 transactions are handled differently
     console.error('Error updating survey:', error);
     res.status(500).json({ error: 'Failed to update survey' });
   }
@@ -335,7 +345,7 @@ router.delete('/:id', auth, async (req, res) => {
 
     // Check if survey belongs to user and is not already deleted
     const surveyCheck = await query(
-      'SELECT id FROM surveys WHERE id = $1 AND user_id = $2 AND is_deleted = false',
+      'SELECT id FROM surveys WHERE id = ? AND user_id = ? AND is_deleted = 0',
       [id, req.user.id]
     );
 
@@ -345,13 +355,13 @@ router.delete('/:id', auth, async (req, res) => {
 
     // Soft delete survey
     await query(
-      'UPDATE surveys SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP, deleted_by = $1 WHERE id = $2',
+      'UPDATE surveys SET is_deleted = 1, deleted_at = datetime(\'now\'), deleted_by = ? WHERE id = ?',
       [req.user.id, id]
     );
 
     // Soft delete all questions for this survey
     await query(
-      'UPDATE questions SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP WHERE survey_id = $1',
+      'UPDATE questions SET is_deleted = 1, deleted_at = datetime(\'now\') WHERE survey_id = ?',
       [id]
     );
 
@@ -369,7 +379,7 @@ router.post('/:id/restore', auth, async (req, res) => {
 
     // Check if survey belongs to user and is deleted
     const surveyCheck = await query(
-      'SELECT id FROM surveys WHERE id = $1 AND user_id = $2 AND is_deleted = true',
+      'SELECT id FROM surveys WHERE id = ? AND user_id = ? AND is_deleted = 1',
       [id, req.user.id]
     );
 
@@ -379,13 +389,13 @@ router.post('/:id/restore', auth, async (req, res) => {
 
     // Restore survey
     await query(
-      'UPDATE surveys SET is_deleted = false, deleted_at = NULL, deleted_by = NULL WHERE id = $1',
+      'UPDATE surveys SET is_deleted = 0, deleted_at = NULL, deleted_by = NULL WHERE id = ?',
       [id]
     );
 
     // Restore all questions for this survey
     await query(
-      'UPDATE questions SET is_deleted = false, deleted_at = NULL WHERE survey_id = $1',
+      'UPDATE questions SET is_deleted = 0, deleted_at = NULL WHERE survey_id = ?',
       [id]
     );
 
@@ -403,7 +413,7 @@ router.delete('/:id/permanent', auth, async (req, res) => {
 
     // Check if user is admin
     const userCheck = await query(
-      'SELECT role FROM users WHERE id = $1',
+      'SELECT role FROM users WHERE id = ?',
       [req.user.id]
     );
 
@@ -413,7 +423,7 @@ router.delete('/:id/permanent', auth, async (req, res) => {
 
     // Check if survey exists
     const surveyCheck = await query(
-      'SELECT id FROM surveys WHERE id = $1',
+      'SELECT id FROM surveys WHERE id = ?',
       [id]
     );
 
@@ -422,7 +432,7 @@ router.delete('/:id/permanent', auth, async (req, res) => {
     }
 
     // Permanently delete survey (cascade will delete questions, responses, and versions)
-    await query('DELETE FROM surveys WHERE id = $1', [id]);
+    await query('DELETE FROM surveys WHERE id = ?', [id]);
 
     res.json({ message: 'Survey permanently deleted' });
   } catch (error) {
@@ -438,7 +448,7 @@ router.get('/:id/versions', auth, async (req, res) => {
 
     // Check if survey belongs to user
     const surveyCheck = await query(
-      'SELECT id FROM surveys WHERE id = $1 AND user_id = $2',
+      'SELECT id FROM surveys WHERE id = ? AND user_id = ?',
       [id, req.user.id]
     );
 
@@ -448,7 +458,7 @@ router.get('/:id/versions', auth, async (req, res) => {
 
     // Get all versions
     const versionsResult = await query(
-      'SELECT * FROM survey_versions WHERE survey_id = $1 ORDER BY version_number DESC',
+      'SELECT * FROM survey_versions WHERE survey_id = ? ORDER BY version_number DESC',
       [id]
     );
 
@@ -466,7 +476,7 @@ router.post('/:id/restore-version/:version', auth, async (req, res) => {
 
     // Check if survey belongs to user
     const surveyCheck = await query(
-      'SELECT id FROM surveys WHERE id = $1 AND user_id = $2',
+      'SELECT id FROM surveys WHERE id = ? AND user_id = ?',
       [id, req.user.id]
     );
 
@@ -476,7 +486,7 @@ router.post('/:id/restore-version/:version', auth, async (req, res) => {
 
     // Get the specific version
     const versionResult = await query(
-      'SELECT * FROM survey_versions WHERE survey_id = $1 AND version_number = $2',
+      'SELECT * FROM survey_versions WHERE survey_id = ? AND version_number = ?',
       [id, version]
     );
 
@@ -487,19 +497,19 @@ router.post('/:id/restore-version/:version', auth, async (req, res) => {
     const versionData = versionResult.rows[0];
 
     // Start a transaction
-    await query('BEGIN');
+    // SQLite3 transactions are handled differently
 
     // Update survey with version data
     await query(
       `UPDATE surveys 
-       SET title = $1, description = $2, theme = $3, settings = $4, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $5`,
+       SET title = ?, description = ?, theme = ?, settings = ?, updated_at = datetime('now')
+       WHERE id = ?`,
       [versionData.title, versionData.description, versionData.theme, versionData.settings, id]
     );
 
     // Soft delete current questions
     await query(
-      'UPDATE questions SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP WHERE survey_id = $1',
+      'UPDATE questions SET is_deleted = 1, deleted_at = datetime(\'now\') WHERE survey_id = ?',
       [id]
     );
 
@@ -509,11 +519,11 @@ router.post('/:id/restore-version/:version', auth, async (req, res) => {
       const question = questions[i];
       await query(
         `INSERT INTO questions (survey_id, type, title, description, required, options, settings, order_index)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
-          question.type,
-          question.title,
+          question.question_type,
+          question.question_text,
           question.description || '',
           question.required || false,
           JSON.stringify(question.options || []),
@@ -523,11 +533,11 @@ router.post('/:id/restore-version/:version', auth, async (req, res) => {
       );
     }
 
-    await query('COMMIT');
+    // SQLite3 transactions are handled differently
 
     res.json({ message: 'Version restored successfully' });
   } catch (error) {
-    await query('ROLLBACK');
+    // SQLite3 transactions are handled differently
     console.error('Error restoring version:', error);
     res.status(500).json({ error: 'Failed to restore version' });
   }
@@ -540,7 +550,7 @@ router.get('/:id/share', async (req, res) => {
     
     // Check if survey exists and is published
     const surveyResult = await query(
-      'SELECT id, title, description FROM surveys WHERE id = $1 AND status = $2 AND is_deleted = false',
+      'SELECT id, title, description FROM surveys WHERE id = ? AND status = ? AND is_deleted = 0',
       [id, 'published']
     );
 
@@ -575,7 +585,7 @@ router.post('/:id/publish', auth, async (req, res) => {
 
     // Check if survey belongs to user and is not deleted
     const surveyCheck = await query(
-      'SELECT id, status FROM surveys WHERE id = $1 AND user_id = $2 AND is_deleted = false',
+      'SELECT id, status FROM surveys WHERE id = ? AND user_id = ? AND is_deleted = 0',
       [id, req.user.id]
     );
 
@@ -592,7 +602,7 @@ router.post('/:id/publish', auth, async (req, res) => {
 
     // Check if survey has questions
     const questionsCheck = await query(
-      'SELECT COUNT(*) as question_count FROM questions WHERE survey_id = $1 AND is_deleted = false',
+      'SELECT COUNT(*) as question_count FROM questions WHERE survey_id = ? AND is_deleted = 0',
       [id]
     );
 
@@ -602,7 +612,7 @@ router.post('/:id/publish', auth, async (req, res) => {
 
     // Publish the survey
     await query(
-      'UPDATE surveys SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      'UPDATE surveys SET status = ?, updated_at = datetime(\'now\') WHERE id = ?',
       ['published', id]
     );
 
@@ -623,7 +633,7 @@ router.post('/:id/unpublish', auth, async (req, res) => {
 
     // Check if survey belongs to user and is not deleted
     const surveyCheck = await query(
-      'SELECT id, status FROM surveys WHERE id = $1 AND user_id = $2 AND is_deleted = false',
+      'SELECT id, status FROM surveys WHERE id = ? AND user_id = ? AND is_deleted = 0',
       [id, req.user.id]
     );
 
@@ -640,7 +650,7 @@ router.post('/:id/unpublish', auth, async (req, res) => {
 
     // Unpublish the survey
     await query(
-      'UPDATE surveys SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      'UPDATE surveys SET status = ?, updated_at = datetime(\'now\') WHERE id = ?',
       ['draft', id]
     );
 
