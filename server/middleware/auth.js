@@ -13,7 +13,7 @@ const auth = async (req, res, next) => {
     
     // Get user from database
     const result = await query(
-      'SELECT id, email, name, role FROM users WHERE id = $1',
+      'SELECT id, email, full_name, role FROM users WHERE id = ?',
       [decoded.userId]
     );
 

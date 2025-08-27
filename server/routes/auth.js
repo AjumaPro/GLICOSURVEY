@@ -97,7 +97,7 @@ router.post('/login', async (req, res) => {
 
     // Find user
     const result = await query(
-      'SELECT id, email, password_hash, name, role FROM users WHERE email = $1',
+      'SELECT id, email, password_hash, full_name, role FROM users WHERE email = ?',
       [email]
     );
 
@@ -125,7 +125,7 @@ router.post('/login', async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        username: user.name,
+        username: user.full_name,
         role: user.role
       },
       token
@@ -144,7 +144,7 @@ router.get('/me', auth, async (req, res) => {
       user: {
         id: req.user.id,
         email: req.user.email,
-        username: req.user.name,
+        username: req.user.full_name,
         role: req.user.role
       }
     });
@@ -162,7 +162,7 @@ router.put('/profile', auth, async (req, res) => {
     // Check if email is already taken by another user
     if (email && email !== req.user.email) {
       const existingUser = await query(
-        'SELECT id FROM users WHERE email = $1 AND id != $2',
+        'SELECT id FROM users WHERE email = ? AND id != ?',
         [email, req.user.id]
       );
 
@@ -174,17 +174,17 @@ router.put('/profile', auth, async (req, res) => {
     // Update user
     const result = await query(
       `UPDATE users 
-       SET name = $1, email = $2, updated_at = CURRENT_TIMESTAMP
-       WHERE id = $3
-       RETURNING id, email, name, role`,
-      [username || req.user.name, email || req.user.email, req.user.id]
+       SET full_name = ?, email = ?, updated_at = datetime('now')
+       WHERE id = ?
+       RETURNING id, email, full_name, role`,
+      [username || req.user.full_name, email || req.user.email, req.user.id]
     );
 
     res.json({
       user: {
         id: result.rows[0].id,
         email: result.rows[0].email,
-        username: result.rows[0].name,
+        username: result.rows[0].full_name,
         role: result.rows[0].role
       }
     });
