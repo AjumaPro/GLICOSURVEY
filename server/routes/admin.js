@@ -65,22 +65,20 @@ router.get('/users', auth, requireAdmin, async (req, res) => {
 
     // If admin (not super admin), filter out super admin accounts except those they created
     if (adminUser.role === 'admin') {
-      paramCount++;
-      whereClause = `WHERE (role != 'super_admin' OR created_by = $${paramCount})`;
+      whereClause = `WHERE (role != 'super_admin' OR created_by = ?)`;
       params.push(req.user.id);
     }
 
     if (search) {
-      paramCount++;
       const searchCondition = whereClause ? 'AND' : 'WHERE';
-      whereClause += ` ${searchCondition} (name ILIKE $${paramCount} OR email ILIKE $${paramCount})`;
+      whereClause += ` ${searchCondition} (LOWER(full_name) LIKE LOWER(?) OR LOWER(email) LIKE LOWER(?))`;
+      params.push(`%${search}%`);
       params.push(`%${search}%`);
     }
 
     if (role) {
-      paramCount++;
       const roleCondition = whereClause ? 'AND' : 'WHERE';
-      whereClause += ` ${roleCondition} role = $${paramCount}`;
+      whereClause += ` ${roleCondition} role = ?`;
       params.push(role);
     }
 
@@ -91,11 +89,11 @@ router.get('/users', auth, requireAdmin, async (req, res) => {
     const totalUsers = parseInt(countResult.rows[0].count);
 
     const usersResult = await query(
-      `SELECT id, email, name, role, created_at, updated_at,
+      `SELECT id, email, full_name, role, created_at, updated_at,
               (SELECT COUNT(*) FROM surveys WHERE user_id = users.id) as survey_count
        FROM users ${whereClause}
        ORDER BY created_at DESC
-       LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`,
+       LIMIT ? OFFSET ?`,
       [...params, limit, offset]
     );
 
@@ -129,10 +127,10 @@ router.post('/users', auth, requireAdmin, async (req, res) => {
     }
 
     const adminUser = adminResult.rows[0];
-    const { email, password, name, role = 'user' } = req.body;
+    const { email, password, full_name, role = 'user' } = req.body;
 
-    if (!email || !password || !name) {
-      return res.status(400).json({ error: 'Email, password, and name are required' });
+    if (!email || !password || !full_name) {
+      return res.status(400).json({ error: 'Email, password, and full_name are required' });
     }
 
     // Validate role (admins can only create regular users, super admins can create any role)
