@@ -204,7 +204,7 @@ router.post('/', auth, async (req, res) => {
       for (let i = 0; i < questions.length; i++) {
         const question = questions[i];
         await query(
-          `INSERT INTO questions (survey_id, type, title, description, required, options, settings, order_index)
+          `INSERT INTO questions (survey_id, question_type, question_text, description, required, options, settings, order_index)
            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
           [
             survey.id,
