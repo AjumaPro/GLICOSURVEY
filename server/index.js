@@ -41,7 +41,6 @@ const corsOptions = {
     ? [
         process.env.FRONTEND_URL || 'http://localhost:3000',
         'http://localhost:3000',
-        /\.railway\.app$/,
         /\.vercel\.app$/,
         /\.netlify\.app$/
       ]

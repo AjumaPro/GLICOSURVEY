@@ -130,7 +130,7 @@ const createDefaultAdmin = async () => {
       INSERT INTO users (username, email, password_hash, full_name, role)
       VALUES ($1, $2, $3, $4, $5)
       ON CONFLICT (email) DO NOTHING
-    `, ['admin', 'admin@railwayapp.com', hashedPassword, 'System Administrator', 'admin']);
+    `, ['admin', 'admin@glico.com', hashedPassword, 'System Administrator', 'admin']);
     
     console.log('✅ Default admin user created');
   } catch (error) {
