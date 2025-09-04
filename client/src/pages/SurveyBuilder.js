@@ -15,7 +15,23 @@ import {
   Type,
   Image,
   BarChart3,
-  Upload
+  Upload,
+  Calendar,
+  Clock,
+  Star,
+  ThumbsUp,
+  ToggleLeft,
+  CheckSquare,
+  Hash,
+  Mail,
+  Phone,
+  MapPin,
+  DollarSign,
+  Percent,
+  Sliders,
+  X,
+  Globe,
+  Lock
 } from 'lucide-react';
 import QuestionUpload from '../components/QuestionUpload';
 import EmojiScale, { emojiScaleTemplates } from '../components/EmojiScale';
@@ -54,7 +70,7 @@ const SurveyBuilder = () => {
     if (id) {
       fetchSurvey();
     }
-  }, [id]);
+  }, [id, fetchSurvey]);
 
   const saveSurvey = async () => {
     try {
@@ -62,7 +78,12 @@ const SurveyBuilder = () => {
       const surveyData = {
         ...survey,
         title: survey.title || 'Untitled Survey',
-        questions: questions.map((q, index) => ({ ...q, order_index: index }))
+        questions: questions.map((q, index) => ({
+          ...q,
+          question_type: q.type, // Map 'type' to 'question_type' for server
+          question_text: q.title, // Map 'title' to 'question_text' for server
+          order_index: index
+        }))
       };
 
       if (id) {
@@ -91,22 +112,112 @@ const SurveyBuilder = () => {
     setQuestions(items);
   };
 
+  const publishSurvey = async () => {
+    try {
+      setLoading(true);
+      await axios.post(`/api/surveys/${id}/publish`);
+      toast.success('Survey published successfully!');
+      fetchSurvey(); // Refresh survey data
+    } catch (error) {
+      console.error('Error publishing survey:', error);
+      toast.error('Failed to publish survey');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const unpublishSurvey = async () => {
+    try {
+      setLoading(true);
+      await axios.post(`/api/surveys/${id}/unpublish`);
+      toast.success('Survey unpublished successfully!');
+      fetchSurvey(); // Refresh survey data
+    } catch (error) {
+      console.error('Error unpublishing survey:', error);
+      toast.error('Failed to unpublish survey');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const duplicateSurvey = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post(`/api/surveys/${id}/copy`);
+      toast.success('Survey duplicated successfully!');
+      // Navigate to the new survey builder
+      navigate(`/builder/${response.data.survey.id}`);
+    } catch (error) {
+      console.error('Error duplicating survey:', error);
+      toast.error('Failed to duplicate survey');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const addQuestion = (type) => {
+    const getDefaultOptions = (questionType) => {
+      switch (questionType) {
+        case 'emoji_scale':
+          return emojiScaleTemplates.satisfaction;
+        case 'likert_scale':
+          return [
+            { value: 1, label: 'Strongly Disagree' },
+            { value: 2, label: 'Disagree' },
+            { value: 3, label: 'Neutral' },
+            { value: 4, label: 'Agree' },
+            { value: 5, label: 'Strongly Agree' }
+          ];
+        case 'multiple_choice':
+          return ['Option 1', 'Option 2', 'Option 3'];
+        case 'checkbox':
+          return ['Option 1', 'Option 2', 'Option 3'];
+        case 'star_rating':
+          return { maxStars: 5, allowHalf: false };
+        case 'thumbs_rating':
+          return { showLabels: true };
+        case 'slider':
+          return { min: 0, max: 100, step: 1, showLabels: true };
+        case 'yes_no':
+          return ['Yes', 'No'];
+        case 'boolean':
+          return ['True', 'False'];
+        case 'currency':
+          return { currency: 'USD', symbol: '$' };
+        case 'percentage':
+          return { min: 0, max: 100, step: 1 };
+        default:
+          return [];
+      }
+    };
+
+    const getDefaultSettings = (questionType) => {
+      switch (questionType) {
+        case 'likert_scale':
+          return { min: 1, max: 5 };
+        case 'slider':
+          return { min: 0, max: 100, step: 1 };
+        case 'star_rating':
+          return { maxStars: 5, allowHalf: false };
+        case 'currency':
+          return { currency: 'USD', symbol: '$', decimals: 2 };
+        case 'percentage':
+          return { min: 0, max: 100, step: 1 };
+        case 'number':
+          return { min: null, max: null, step: 1 };
+        default:
+          return {};
+      }
+    };
+
     const newQuestion = {
       id: Date.now(),
       type,
       title: '',
       description: '',
       required: false,
-      options: type === 'emoji_scale' ? emojiScaleTemplates.satisfaction : 
-               type === 'likert_scale' ? [
-                 { value: 1, label: 'Strongly Disagree' },
-                 { value: 2, label: 'Disagree' },
-                 { value: 3, label: 'Neutral' },
-                 { value: 4, label: 'Agree' },
-                 { value: 5, label: 'Strongly Agree' }
-               ] : [],
-      settings: type === 'likert_scale' ? { min: 1, max: 5 } : {}
+      options: getDefaultOptions(type),
+      settings: getDefaultSettings(type)
     };
 
     setQuestions([...questions, newQuestion]);
@@ -142,26 +253,96 @@ const SurveyBuilder = () => {
   };
 
   const questionTypes = [
-    { type: 'emoji_scale', label: 'Emoji Scale', icon: Smile, color: 'text-yellow-600' },
-    { type: 'multiple_choice', label: 'Multiple Choice', icon: List, color: 'text-blue-600' },
+    // Basic Question Types
     { type: 'text', label: 'Text Input', icon: Type, color: 'text-green-600' },
+    { type: 'multiple_choice', label: 'Multiple Choice', icon: List, color: 'text-blue-600' },
+    { type: 'checkbox', label: 'Checkbox (Multiple Select)', icon: CheckSquare, color: 'text-blue-500' },
+    
+    // Rating & Scale Questions
+    { type: 'emoji_scale', label: 'Emoji Scale', icon: Smile, color: 'text-yellow-600' },
     { type: 'likert_scale', label: 'Likert Scale', icon: BarChart3, color: 'text-purple-600' },
+    { type: 'star_rating', label: 'Star Rating', icon: Star, color: 'text-yellow-500' },
+    { type: 'thumbs_rating', label: 'Thumbs Up/Down', icon: ThumbsUp, color: 'text-green-500' },
+    { type: 'slider', label: 'Slider Scale', icon: Sliders, color: 'text-indigo-600' },
+    
+    // Number & Date Questions
+    { type: 'number', label: 'Number Input', icon: Hash, color: 'text-gray-600' },
+    { type: 'date', label: 'Date Picker', icon: Calendar, color: 'text-red-600' },
+    { type: 'time', label: 'Time Picker', icon: Clock, color: 'text-orange-600' },
+    { type: 'currency', label: 'Currency Input', icon: DollarSign, color: 'text-green-700' },
+    { type: 'percentage', label: 'Percentage Input', icon: Percent, color: 'text-blue-700' },
+    
+    // Contact & Personal Info
+    { type: 'email', label: 'Email Address', icon: Mail, color: 'text-purple-500' },
+    { type: 'phone', label: 'Phone Number', icon: Phone, color: 'text-teal-600' },
+    { type: 'address', label: 'Address', icon: MapPin, color: 'text-red-500' },
+    { type: 'contact_followup', label: 'Comments & Phone Number', icon: Upload, color: 'text-indigo-600' },
+    
+    // File & Media
     { type: 'image_upload', label: 'Image Upload', icon: Image, color: 'text-orange-600' },
-    { type: 'contact_followup', label: 'Comments & Phone Number', icon: Upload, color: 'text-indigo-600' }
+    { type: 'file_upload', label: 'File Upload', icon: Upload, color: 'text-gray-700' },
+    
+    // Yes/No & Boolean
+    { type: 'yes_no', label: 'Yes/No Question', icon: ToggleLeft, color: 'text-green-600' },
+    { type: 'boolean', label: 'True/False', icon: CheckSquare, color: 'text-blue-600' }
   ];
 
   const renderQuestionEditor = (question) => {
     switch (question.type) {
-      case 'emoji_scale':
-        return <EmojiScaleEditor question={question} updateQuestion={updateQuestion} />;
-      case 'multiple_choice':
-        return <MultipleChoiceEditor question={question} updateQuestion={updateQuestion} />;
+      // Basic Question Types
       case 'text':
         return <TextEditor question={question} updateQuestion={updateQuestion} />;
+      case 'multiple_choice':
+        return <MultipleChoiceEditor question={question} updateQuestion={updateQuestion} />;
+      case 'checkbox':
+        return <CheckboxEditor question={question} updateQuestion={updateQuestion} />;
+      
+      // Rating & Scale Questions
+      case 'emoji_scale':
+        return <EmojiScaleEditor question={question} updateQuestion={updateQuestion} />;
       case 'likert_scale':
         return <LikertScaleEditor question={question} updateQuestion={updateQuestion} />;
+      case 'star_rating':
+        return <StarRatingEditor question={question} updateQuestion={updateQuestion} />;
+      case 'thumbs_rating':
+        return <ThumbsRatingEditor question={question} updateQuestion={updateQuestion} />;
+      case 'slider':
+        return <SliderEditor question={question} updateQuestion={updateQuestion} />;
+      
+      // Number & Date Questions
+      case 'number':
+        return <NumberEditor question={question} updateQuestion={updateQuestion} />;
+      case 'date':
+        return <DateEditor question={question} updateQuestion={updateQuestion} />;
+      case 'time':
+        return <TimeEditor question={question} updateQuestion={updateQuestion} />;
+      case 'currency':
+        return <CurrencyEditor question={question} updateQuestion={updateQuestion} />;
+      case 'percentage':
+        return <PercentageEditor question={question} updateQuestion={updateQuestion} />;
+      
+      // Contact & Personal Info
+      case 'email':
+        return <EmailEditor question={question} updateQuestion={updateQuestion} />;
+      case 'phone':
+        return <PhoneEditor question={question} updateQuestion={updateQuestion} />;
+      case 'address':
+        return <AddressEditor question={question} updateQuestion={updateQuestion} />;
       case 'contact_followup':
         return <ContactFollowupEditor question={question} updateQuestion={updateQuestion} />;
+      
+      // File & Media
+      case 'image_upload':
+        return <ImageUploadEditor question={question} updateQuestion={updateQuestion} />;
+      case 'file_upload':
+        return <FileUploadEditor question={question} updateQuestion={updateQuestion} />;
+      
+      // Yes/No & Boolean
+      case 'yes_no':
+        return <YesNoEditor question={question} updateQuestion={updateQuestion} />;
+      case 'boolean':
+        return <BooleanEditor question={question} updateQuestion={updateQuestion} />;
+      
       default:
         return <div>Question type not supported</div>;
     }
@@ -212,6 +393,19 @@ const SurveyBuilder = () => {
                   <span className="mt-1 text-sm text-gray-700">{option.label}</span>
                 </label>
               ))}
+            </div>
+          </div>
+        );
+      case 'image_upload':
+        return (
+          <div className="p-4 border rounded-lg">
+            <h4 className="font-medium mb-2">{question.title}</h4>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <Image className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600">Click to upload image</p>
+              {question.instructions && (
+                <p className="text-xs text-gray-500 mt-1">{question.instructions}</p>
+              )}
             </div>
           </div>
         );
@@ -278,6 +472,37 @@ const SurveyBuilder = () => {
             <Save className="h-4 w-4 mr-2" />
             {loading ? 'Saving...' : 'Save Survey'}
           </button>
+          {id && survey && (
+            <>
+              <button
+                onClick={duplicateSurvey}
+                disabled={loading}
+                className="btn-secondary"
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                {loading ? 'Duplicating...' : 'Duplicate'}
+              </button>
+              {survey.status === 'draft' ? (
+                <button
+                  onClick={publishSurvey}
+                  disabled={loading || questions.length === 0}
+                  className="btn-success"
+                >
+                  <Globe className="h-4 w-4 mr-2" />
+                  {loading ? 'Publishing...' : 'Publish'}
+                </button>
+              ) : (
+                <button
+                  onClick={unpublishSurvey}
+                  disabled={loading}
+                  className="btn-warning"
+                >
+                  <Lock className="h-4 w-4 mr-2" />
+                  {loading ? 'Unpublishing...' : 'Unpublish'}
+                </button>
+              )}
+            </>
+          )}
         </div>
       </div>
 
@@ -681,6 +906,11 @@ const TextEditor = ({ question, updateQuestion }) => {
 };
 
 const LikertScaleEditor = ({ question, updateQuestion }) => {
+  // Ensure question.settings exists with defaults
+  const settings = question.settings || {};
+  const min = settings.min || 1;
+  const max = settings.max || 5;
+  
   const generateOptions = (min, max) => {
     const options = [];
     const labels = ['Strongly Disagree', 'Disagree', 'Neutral', 'Agree', 'Strongly Agree'];
@@ -696,7 +926,7 @@ const LikertScaleEditor = ({ question, updateQuestion }) => {
   };
 
   const handleScaleChange = (field, value) => {
-    const newSettings = { ...question.settings, [field]: parseInt(value) };
+    const newSettings = { ...settings, [field]: parseInt(value) };
     const newOptions = generateOptions(newSettings.min || 1, newSettings.max || 5);
     
     updateQuestion(question.id, {
@@ -722,7 +952,7 @@ const LikertScaleEditor = ({ question, updateQuestion }) => {
         <div className="flex items-center space-x-2 mt-1">
           <input
             type="number"
-            value={question.settings.min || 1}
+            value={min}
             onChange={(e) => handleScaleChange('min', e.target.value)}
             className="input w-20"
             min="1"
@@ -731,7 +961,7 @@ const LikertScaleEditor = ({ question, updateQuestion }) => {
           <span>to</span>
           <input
             type="number"
-            value={question.settings.max || 5}
+            value={max}
             onChange={(e) => handleScaleChange('max', e.target.value)}
             className="input w-20"
             min="1"
@@ -742,7 +972,7 @@ const LikertScaleEditor = ({ question, updateQuestion }) => {
       <div>
         <label className="block text-sm font-medium text-gray-700">Scale Options</label>
         <div className="mt-2 space-y-2">
-          {question.options?.map((option, index) => (
+          {(question.options || []).map((option, index) => (
             <div key={index} className="flex items-center space-x-2">
               <input
                 type="text"
@@ -771,6 +1001,68 @@ const LikertScaleEditor = ({ question, updateQuestion }) => {
         <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
           Required question
         </label>
+      </div>
+    </div>
+  );
+};
+
+const ImageUploadEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Upload Instructions</label>
+        <input
+          type="text"
+          value={question.instructions || ''}
+          onChange={(e) => updateQuestion(question.id, { instructions: e.target.value })}
+          className="input mt-1"
+          placeholder="e.g., Please upload a clear photo of your receipt"
+        />
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+      <div className="border-t pt-4">
+        <h4 className="font-medium text-gray-900 mb-2">Preview</h4>
+        <div className="p-4 border rounded-lg">
+          <h4 className="font-medium mb-2">{question.title || 'Image Upload Question'}</h4>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            <Image className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-sm text-gray-600">Click to upload image</p>
+            {question.instructions && (
+              <p className="text-xs text-gray-500 mt-1">{question.instructions}</p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -832,6 +1124,879 @@ const ContactFollowupEditor = ({ question, updateQuestion }) => {
         />
         <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
           Required section
+        </label>
+      </div>
+    </div>
+  );
+};
+
+// New Question Editor Components
+const CheckboxEditor = ({ question, updateQuestion }) => {
+  const [newOption, setNewOption] = useState('');
+
+  const addOption = () => {
+    if (newOption.trim()) {
+      const options = Array.isArray(question.options) ? [...question.options, newOption.trim()] : [newOption.trim()];
+      updateQuestion(question.id, { options });
+      setNewOption('');
+    }
+  };
+
+  const removeOption = (index) => {
+    const options = question.options.filter((_, i) => i !== index);
+    updateQuestion(question.id, { options });
+  };
+
+  const updateOption = (index, value) => {
+    const options = [...question.options];
+    options[index] = value;
+    updateQuestion(question.id, { options });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Options</label>
+        <div className="space-y-2 mt-1">
+          {question.options?.map((option, index) => (
+            <div key={index} className="flex items-center space-x-2">
+              <input
+                type="text"
+                value={option}
+                onChange={(e) => updateOption(index, e.target.value)}
+                className="input flex-1"
+                placeholder="Option text"
+              />
+              <button
+                type="button"
+                onClick={() => removeOption(index)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          <div className="flex items-center space-x-2">
+            <input
+              type="text"
+              value={newOption}
+              onChange={(e) => setNewOption(e.target.value)}
+              className="input flex-1"
+              placeholder="Add new option"
+              onKeyPress={(e) => e.key === 'Enter' && addOption()}
+            />
+            <button
+              type="button"
+              onClick={addOption}
+              className="btn-primary"
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const StarRatingEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Maximum Stars</label>
+        <select
+          value={question.settings?.maxStars || 5}
+          onChange={(e) => updateQuestion(question.id, { 
+            settings: { ...question.settings, maxStars: parseInt(e.target.value) }
+          })}
+          className="input mt-1"
+        >
+          <option value={3}>3 Stars</option>
+          <option value={4}>4 Stars</option>
+          <option value={5}>5 Stars</option>
+          <option value={10}>10 Stars</option>
+        </select>
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`allowHalf-${question.id}`}
+          checked={question.settings?.allowHalf || false}
+          onChange={(e) => updateQuestion(question.id, { 
+            settings: { ...question.settings, allowHalf: e.target.checked }
+          })}
+          className="mr-2"
+        />
+        <label htmlFor={`allowHalf-${question.id}`} className="text-sm text-gray-700">
+          Allow half stars
+        </label>
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const ThumbsRatingEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`showLabels-${question.id}`}
+          checked={question.settings?.showLabels || true}
+          onChange={(e) => updateQuestion(question.id, { 
+            settings: { ...question.settings, showLabels: e.target.checked }
+          })}
+          className="mr-2"
+        />
+        <label htmlFor={`showLabels-${question.id}`} className="text-sm text-gray-700">
+          Show labels (Thumbs Up/Down)
+        </label>
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const SliderEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Minimum Value</label>
+          <input
+            type="number"
+            value={question.settings?.min || 0}
+            onChange={(e) => updateQuestion(question.id, { 
+              settings: { ...question.settings, min: parseInt(e.target.value) }
+            })}
+            className="input mt-1"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Maximum Value</label>
+          <input
+            type="number"
+            value={question.settings?.max || 100}
+            onChange={(e) => updateQuestion(question.id, { 
+              settings: { ...question.settings, max: parseInt(e.target.value) }
+            })}
+            className="input mt-1"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Step</label>
+          <input
+            type="number"
+            value={question.settings?.step || 1}
+            onChange={(e) => updateQuestion(question.id, { 
+              settings: { ...question.settings, step: parseInt(e.target.value) }
+            })}
+            className="input mt-1"
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`showLabels-${question.id}`}
+          checked={question.settings?.showLabels || true}
+          onChange={(e) => updateQuestion(question.id, { 
+            settings: { ...question.settings, showLabels: e.target.checked }
+          })}
+          className="mr-2"
+        />
+        <label htmlFor={`showLabels-${question.id}`} className="text-sm text-gray-700">
+          Show min/max labels
+        </label>
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const NumberEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Minimum Value</label>
+          <input
+            type="number"
+            value={question.settings?.min || ''}
+            onChange={(e) => updateQuestion(question.id, { 
+              settings: { ...question.settings, min: e.target.value ? parseInt(e.target.value) : null }
+            })}
+            className="input mt-1"
+            placeholder="No limit"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Maximum Value</label>
+          <input
+            type="number"
+            value={question.settings?.max || ''}
+            onChange={(e) => updateQuestion(question.id, { 
+              settings: { ...question.settings, max: e.target.value ? parseInt(e.target.value) : null }
+            })}
+            className="input mt-1"
+            placeholder="No limit"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Step</label>
+          <input
+            type="number"
+            value={question.settings?.step || 1}
+            onChange={(e) => updateQuestion(question.id, { 
+              settings: { ...question.settings, step: parseInt(e.target.value) }
+            })}
+            className="input mt-1"
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const DateEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const TimeEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const CurrencyEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Currency</label>
+          <select
+            value={question.settings?.currency || 'USD'}
+            onChange={(e) => updateQuestion(question.id, { 
+              settings: { ...question.settings, currency: e.target.value }
+            })}
+            className="input mt-1"
+          >
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+            <option value="GHS">GHS (₵)</option>
+            <option value="NGN">NGN (₦)</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Decimal Places</label>
+          <input
+            type="number"
+            value={question.settings?.decimals || 2}
+            onChange={(e) => updateQuestion(question.id, { 
+              settings: { ...question.settings, decimals: parseInt(e.target.value) }
+            })}
+            className="input mt-1"
+            min="0"
+            max="4"
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const PercentageEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Minimum %</label>
+          <input
+            type="number"
+            value={question.settings?.min || 0}
+            onChange={(e) => updateQuestion(question.id, { 
+              settings: { ...question.settings, min: parseInt(e.target.value) }
+            })}
+            className="input mt-1"
+            min="0"
+            max="100"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700">Maximum %</label>
+          <input
+            type="number"
+            value={question.settings?.max || 100}
+            onChange={(e) => updateQuestion(question.id, { 
+              settings: { ...question.settings, max: parseInt(e.target.value) }
+            })}
+            className="input mt-1"
+            min="0"
+            max="100"
+          />
+        </div>
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const EmailEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const PhoneEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Country Code</label>
+        <input
+          type="text"
+          value={question.settings?.countryCode || '+233'}
+          onChange={(e) => updateQuestion(question.id, { 
+            settings: { ...question.settings, countryCode: e.target.value }
+          })}
+          className="input mt-1"
+          placeholder="+233"
+        />
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const AddressEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const FileUploadEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Accepted File Types</label>
+        <input
+          type="text"
+          value={question.settings?.acceptedTypes || 'image/*,.pdf,.doc,.docx'}
+          onChange={(e) => updateQuestion(question.id, { 
+            settings: { ...question.settings, acceptedTypes: e.target.value }
+          })}
+          className="input mt-1"
+          placeholder="image/*,.pdf,.doc,.docx"
+        />
+        <p className="text-xs text-gray-500 mt-1">Comma-separated file types (e.g., image/*,.pdf,.doc)</p>
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Maximum File Size (MB)</label>
+        <input
+          type="number"
+          value={question.settings?.maxSize || 10}
+          onChange={(e) => updateQuestion(question.id, { 
+            settings: { ...question.settings, maxSize: parseInt(e.target.value) }
+          })}
+          className="input mt-1"
+          min="1"
+          max="100"
+        />
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const YesNoEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
+        </label>
+      </div>
+    </div>
+  );
+};
+
+const BooleanEditor = ({ question, updateQuestion }) => {
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Question Title</label>
+        <input
+          type="text"
+          value={question.title}
+          onChange={(e) => updateQuestion(question.id, { title: e.target.value })}
+          className="input mt-1"
+          placeholder="Enter question title"
+        />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700">Description (Optional)</label>
+        <textarea
+          value={question.description}
+          onChange={(e) => updateQuestion(question.id, { description: e.target.value })}
+          className="input mt-1"
+          rows="2"
+          placeholder="Enter question description"
+        />
+      </div>
+      <div className="flex items-center">
+        <input
+          type="checkbox"
+          id={`required-${question.id}`}
+          checked={question.required}
+          onChange={(e) => updateQuestion(question.id, { required: e.target.checked })}
+          className="mr-2"
+        />
+        <label htmlFor={`required-${question.id}`} className="text-sm text-gray-700">
+          Required question
         </label>
       </div>
     </div>

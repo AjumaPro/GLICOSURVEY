@@ -10,9 +10,10 @@ import SurveyTemplates from './pages/SurveyTemplates';
 import TemplateEditor from './pages/TemplateEditor';
 import Surveys from './pages/Surveys';
 import PublishedSurveys from './pages/PublishedSurveys';
-import DraftSurveys from './pages/DraftSurveys';
 import SurveyPreview from './pages/SurveyPreview';
 import PublishSurvey from './pages/PublishSurvey';
+import SurveyReview from './components/SurveyReview';
+import SurveyEditor from './components/SurveyEditor';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
@@ -101,13 +102,14 @@ function AppRoutes() {
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="surveys" element={<Surveys />} />
         <Route path="surveys/published" element={<PublishedSurveys />} />
-        <Route path="surveys/drafts" element={<DraftSurveys />} />
         <Route path="preview/:id" element={<SurveyPreview />} />
                    <Route path="templates" element={<SurveyTemplates />} />
            <Route path="templates/:id/edit" element={<TemplateEditor />} />
            <Route path="builder" element={<SurveyBuilder />} />
-           <Route path="builder/:id" element={<SurveyBuilder />} />
-           <Route path="publish/:id" element={<PublishSurvey />} />
+                   <Route path="builder/:id" element={<SurveyBuilder />} />
+        <Route path="review/:id" element={<SurveyReview />} />
+        <Route path="editor/:id" element={<SurveyEditor />} />
+        <Route path="publish/:id" element={<PublishSurvey />} />
         <Route path="analytics/:id" element={<SurveyAnalytics />} />
         <Route path="admin" element={
           <AdminRoute>

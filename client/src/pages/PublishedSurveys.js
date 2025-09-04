@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   Plus,
@@ -35,6 +35,7 @@ import QRCodeShare from '../components/QRCodeShare';
 
 const PublishedSurveys = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -62,9 +63,8 @@ const PublishedSurveys = () => {
 
   const fetchPublishedSurveys = async () => {
     try {
-      const response = await axios.get('/api/surveys');
-      const publishedSurveys = response.data.filter(survey => survey.status === 'published');
-      setSurveys(publishedSurveys);
+      const response = await axios.get('/api/surveys/published');
+      setSurveys(response.data);
     } catch (error) {
       console.error('Error fetching published surveys:', error);
       toast.error('Failed to load published surveys');
@@ -114,9 +114,11 @@ const PublishedSurveys = () => {
 
   const handleCopy = async (id) => {
     try {
-      await axios.post(`/api/surveys/${id}/copy`);
+      const response = await axios.post(`/api/surveys/${id}/copy`);
       toast.success('Survey copied successfully');
       fetchPublishedSurveys();
+      // Navigate to the new survey builder
+      navigate(`/builder/${response.data.survey.id}`);
     } catch (error) {
       console.error('Error copying survey:', error);
       toast.error('Failed to copy survey');
@@ -456,6 +458,13 @@ const PublishedSurveys = () => {
                   </div>
                   
                   <div className="flex space-x-1">
+                    <Link
+                      to={`/builder/${survey.id}`}
+                      className="p-2 text-blue-400 hover:text-blue-600 transition-colors rounded-md hover:bg-blue-50"
+                      title="Edit Survey"
+                    >
+                      <Edit3 className="h-4 w-4" />
+                    </Link>
                     <button
                       onClick={() => handleExport(survey.id)}
                       className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-md hover:bg-gray-100"
@@ -563,6 +572,13 @@ const PublishedSurveys = () => {
                           title="Analytics"
                         >
                           <BarChart3 className="h-4 w-4" />
+                        </Link>
+                        <Link
+                          to={`/builder/${survey.id}`}
+                          className="text-primary-600 hover:text-primary-900"
+                          title="Edit Survey"
+                        >
+                          <Edit3 className="h-4 w-4" />
                         </Link>
                         <button
                           onClick={() => handleQRCode(survey)}

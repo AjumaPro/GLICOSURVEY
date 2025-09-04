@@ -58,7 +58,7 @@ router.post('/', async (req, res) => {
 
     // Validate survey exists and is published
     const surveyResult = await query(
-      'SELECT id FROM surveys WHERE id = $1 AND status = $2',
+      'SELECT id FROM surveys WHERE id = ? AND status = ?',
       [surveyId, 'published']
     );
 
@@ -84,7 +84,7 @@ router.post('/', async (req, res) => {
 
         // Validate question exists and belongs to survey
         const questionResult = await query(
-          'SELECT id FROM questions WHERE id = $1 AND survey_id = $2',
+          'SELECT id FROM questions WHERE id = ? AND survey_id = ?',
           [questionId, surveyId]
         );
 
@@ -99,8 +99,7 @@ router.post('/', async (req, res) => {
         // Insert response with additional metadata
         const insertResult = await query(
           `INSERT INTO responses (survey_id, question_id, answer, session_id, metadata)
-           VALUES ($1, $2, $3, $4, $5)
-           RETURNING id`,
+           VALUES (?, ?, ?, ?, ?)`,
           [
             surveyId, 
             questionId, 
@@ -150,7 +149,7 @@ router.get('/survey/:id', async (req, res) => {
 
     // Get survey details
     const surveyResult = await query(
-      'SELECT * FROM surveys WHERE id = $1',
+      'SELECT * FROM surveys WHERE id = ?',
       [id]
     );
 
@@ -165,7 +164,7 @@ router.get('/survey/:id', async (req, res) => {
               COUNT(DISTINCT r.session_id) as unique_respondents
        FROM questions q
        LEFT JOIN responses r ON q.id = r.question_id
-       WHERE q.survey_id = $1
+       WHERE q.survey_id = ?
        GROUP BY q.id
        ORDER BY q.order_index ASC`,
       [id]
@@ -175,7 +174,7 @@ router.get('/survey/:id', async (req, res) => {
     const questionsWithResponses = await Promise.all(
       questionsResult.rows.map(async (question) => {
         const responsesResult = await query(
-          'SELECT answer, session_id, created_at FROM responses WHERE question_id = $1 ORDER BY created_at DESC',
+          'SELECT answer, session_id, created_at FROM responses WHERE question_id = ? ORDER BY created_at DESC',
           [question.id]
         );
 
@@ -329,7 +328,7 @@ router.get('/export/:id', async (req, res) => {
 
     // Get survey and questions
     const surveyResult = await query(
-      'SELECT * FROM surveys WHERE id = $1',
+      'SELECT * FROM surveys WHERE id = ?',
       [id]
     );
 
@@ -338,13 +337,13 @@ router.get('/export/:id', async (req, res) => {
     }
 
     const questionsResult = await query(
-      'SELECT * FROM questions WHERE survey_id = $1 ORDER BY order_index ASC',
+      'SELECT * FROM questions WHERE survey_id = ? ORDER BY order_index ASC',
       [id]
     );
 
     // Get all responses grouped by session
     const sessionsResult = await query(
-      `SELECT DISTINCT session_id FROM responses WHERE survey_id = $1`,
+      `SELECT DISTINCT session_id FROM responses WHERE survey_id = ?`,
       [id]
     );
 
@@ -364,7 +363,7 @@ router.get('/export/:id', async (req, res) => {
         for (let i = 0; i < questionsResult.rows.length; i++) {
           const question = questionsResult.rows[i];
           const responseResult = await query(
-            'SELECT answer FROM responses WHERE session_id = $1 AND question_id = $2',
+            'SELECT answer FROM responses WHERE session_id = ? AND question_id = ?',
             [session.session_id, question.id]
           );
 

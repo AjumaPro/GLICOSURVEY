@@ -11,7 +11,7 @@ router.post('/register', auth, async (req, res) => {
     // Check if the authenticated user is an admin or super admin
     const adminResult = await query(
       'SELECT role FROM users WHERE id = $1',
-      [req.user.id]
+      [parseInt(req.user.id)]
     );
 
     if (adminResult.rows.length === 0) {
@@ -63,7 +63,7 @@ router.post('/register', auth, async (req, res) => {
       `INSERT INTO users (email, password_hash, name, role, created_by)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, email, name, role, created_at`,
-      [email, passwordHash, username, role, req.user.id]
+      [email, passwordHash, username, role, parseInt(req.user.id)]
     );
 
     const user = result.rows[0];
@@ -116,14 +116,14 @@ router.post('/login', async (req, res) => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { userId: user.id },
+      { userId: parseInt(user.id) },
       process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
     res.json({
       user: {
-        id: user.id,
+        id: parseInt(user.id),
         email: user.email,
         username: user.full_name,
         role: user.role
@@ -142,7 +142,7 @@ router.get('/me', auth, async (req, res) => {
   try {
     res.json({
       user: {
-        id: req.user.id,
+        id: parseInt(req.user.id),
         email: req.user.email,
         username: req.user.full_name,
         role: req.user.role
@@ -163,7 +163,7 @@ router.put('/profile', auth, async (req, res) => {
     if (email && email !== req.user.email) {
       const existingUser = await query(
         'SELECT id FROM users WHERE email = ? AND id != ?',
-        [email, req.user.id]
+        [email, parseInt(req.user.id)]
       );
 
       if (existingUser.rows.length > 0) {
@@ -177,7 +177,7 @@ router.put('/profile', auth, async (req, res) => {
        SET full_name = ?, email = ?, updated_at = datetime('now')
        WHERE id = ?
        RETURNING id, email, full_name, role`,
-      [username || req.user.full_name, email || req.user.email, req.user.id]
+      [username || req.user.full_name, email || req.user.email, parseInt(req.user.id)]
     );
 
     res.json({
@@ -207,7 +207,7 @@ router.post('/change-password', auth, async (req, res) => {
     // Get current password hash
     const result = await query(
       'SELECT password_hash FROM users WHERE id = $1',
-      [req.user.id]
+      [parseInt(req.user.id)]
     );
 
     // Verify current password
@@ -224,7 +224,7 @@ router.post('/change-password', auth, async (req, res) => {
     // Update password
     await query(
       'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
-      [newPasswordHash, req.user.id]
+      [newPasswordHash, parseInt(req.user.id)]
     );
 
     res.json({ message: 'Password updated successfully' });

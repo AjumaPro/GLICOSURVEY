@@ -61,13 +61,6 @@ const Dashboard = () => {
       icon: Users,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100'
-    },
-    {
-      name: 'Draft Surveys',
-      value: dashboardData?.summary?.draft_surveys || 0,
-      icon: Edit,
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-100'
     }
   ];
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import {
   Plus,
@@ -9,6 +9,7 @@ import {
   Copy,
   Trash2,
   Eye,
+  EyeOff,
   Download,
   Share2,
   Calendar,
@@ -29,6 +30,7 @@ import toast from 'react-hot-toast';
 
 const Surveys = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,9 +82,11 @@ const Surveys = () => {
 
   const handleCopy = async (id) => {
     try {
-      await axios.post(`/api/surveys/${id}/copy`);
+      const response = await axios.post(`/api/surveys/${id}/copy`);
       toast.success('Survey copied successfully');
       fetchSurveys();
+      // Navigate to the new survey builder
+      navigate(`/builder/${response.data.survey.id}`);
     } catch (error) {
       console.error('Error copying survey:', error);
       toast.error('Failed to copy survey');
@@ -139,6 +143,30 @@ const Surveys = () => {
     } catch (error) {
       console.error('Error archiving survey:', error);
       toast.error('Failed to archive survey');
+    }
+  };
+
+  const handlePublish = async (id) => {
+    try {
+      await axios.post(`/api/surveys/${id}/publish`);
+      toast.success('Survey published successfully');
+      fetchSurveys();
+    } catch (error) {
+      console.error('Error publishing survey:', error);
+      toast.error('Failed to publish survey');
+    }
+  };
+
+  const handleUnpublish = async (id) => {
+    if (window.confirm('Are you sure you want to unpublish this survey? It will no longer be accessible to respondents.')) {
+      try {
+        await axios.post(`/api/surveys/${id}/unpublish`);
+        toast.success('Survey unpublished successfully');
+        fetchSurveys();
+      } catch (error) {
+        console.error('Error unpublishing survey:', error);
+        toast.error('Failed to unpublish survey');
+      }
     }
   };
 
@@ -242,16 +270,6 @@ const Surveys = () => {
                 </span>
               </Link>
               <Link
-                to="/surveys/drafts"
-                className="inline-flex items-center px-4 py-2 bg-yellow-50 text-yellow-700 border border-yellow-200 rounded-md text-sm font-medium hover:bg-yellow-100 transition-colors"
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Draft Surveys
-                <span className="ml-2 bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-xs">
-                  {surveys.filter(s => s.status === 'draft').length}
-                </span>
-              </Link>
-              <Link
                 to="/surveys"
                 className="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-md text-sm font-medium hover:bg-blue-100 transition-colors"
               >
@@ -292,7 +310,6 @@ const Surveys = () => {
             >
               <option value="all">All Status</option>
               <option value="published">Published</option>
-              <option value="draft">Draft</option>
               <option value="archived">Archived</option>
             </select>
             
@@ -423,6 +440,24 @@ const Surveys = () => {
                   </div>
                   
                   <div className="flex space-x-1">
+                    {survey.status === 'draft' && (
+                      <button
+                        onClick={() => handlePublish(survey.id)}
+                        className="p-2 text-green-400 hover:text-green-600 transition-colors rounded-md hover:bg-green-50"
+                        title="Publish Survey"
+                      >
+                        <Globe className="h-4 w-4" />
+                      </button>
+                    )}
+                    {survey.status === 'published' && (
+                      <button
+                        onClick={() => handleUnpublish(survey.id)}
+                        className="p-2 text-yellow-400 hover:text-yellow-600 transition-colors rounded-md hover:bg-yellow-50"
+                        title="Unpublish Survey"
+                      >
+                        <EyeOff className="h-4 w-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => handleExport(survey.id)}
                       className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-md hover:bg-gray-100"
@@ -467,12 +502,6 @@ const Surveys = () => {
                 {surveys.filter(s => s.status === 'published').length}
               </div>
               <div className="text-sm text-gray-600">Published</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-yellow-600">
-                {surveys.filter(s => s.status === 'draft').length}
-              </div>
-              <div className="text-sm text-gray-600">Drafts</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-blue-600">

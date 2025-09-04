@@ -21,7 +21,10 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ error: 'Invalid token. User not found.' });
     }
 
-    req.user = result.rows[0];
+    req.user = {
+      ...result.rows[0],
+      id: parseInt(result.rows[0].id)
+    };
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);

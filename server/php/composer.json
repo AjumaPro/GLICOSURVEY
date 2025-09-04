@@ -1,0 +1,34 @@
+{
+    "name": "glico/survey-system",
+    "description": "GLICO Survey System PHP Backend",
+    "type": "project",
+    "require": {
+        "php": ">=8.0",
+        "firebase/php-jwt": "^6.0",
+        "vlucas/phpdotenv": "^5.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Glico\\Survey\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Glico\\Survey\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "start": "php -S localhost:8000 -t .",
+        "setup": "php setup_php.php"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

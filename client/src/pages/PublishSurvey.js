@@ -104,6 +104,21 @@ const PublishSurvey = () => {
     }
   };
 
+  const handleDuplicate = async () => {
+    try {
+      setPublishing(true);
+      const response = await axios.post(`/api/surveys/${id}/copy`);
+      toast.success('Survey duplicated successfully!');
+      // Navigate to the new survey builder
+      navigate(`/builder/${response.data.survey.id}`);
+    } catch (error) {
+      console.error('Error duplicating survey:', error);
+      toast.error('Failed to duplicate survey');
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   const getPublicUrl = () => {
     return `${window.location.origin}/survey/${id}`;
   };
@@ -391,12 +406,15 @@ const PublishSurvey = () => {
               </Link>
 
               <button
-                onClick={() => navigate(`/surveys/${id}/duplicate`)}
-                className="flex items-center w-full p-4 border border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-colors"
+                onClick={handleDuplicate}
+                disabled={publishing}
+                className="flex items-center w-full p-4 border border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <Copy className="h-5 w-5 text-orange-600 mr-3" />
                 <div>
-                  <h4 className="font-medium text-gray-900">Duplicate Survey</h4>
+                  <h4 className="font-medium text-gray-900">
+                    {publishing ? 'Duplicating...' : 'Duplicate Survey'}
+                  </h4>
                   <p className="text-sm text-gray-600">Create a copy for variations</p>
                 </div>
               </button>

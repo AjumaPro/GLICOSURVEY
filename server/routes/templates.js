@@ -670,7 +670,7 @@ router.delete('/:id', auth, async (req, res) => {
     // Check if template exists and belongs to user
     const templateCheck = await query(
       `SELECT id FROM custom_templates 
-       WHERE id = $1 AND created_by = $2 AND is_deleted = false`,
+       WHERE id = ? AND created_by = ? AND is_deleted = 0`,
       [id, req.user.id]
     );
     
@@ -701,7 +701,7 @@ router.post('/:id/restore', auth, async (req, res) => {
     // Check if template exists and belongs to user
     const templateCheck = await query(
       `SELECT id FROM custom_templates 
-       WHERE id = $1 AND created_by = $2 AND is_deleted = true`,
+       WHERE id = ? AND created_by = ? AND is_deleted = 1`,
       [id, req.user.id]
     );
     
@@ -712,8 +712,8 @@ router.post('/:id/restore', auth, async (req, res) => {
     // Restore template
     await query(
       `UPDATE custom_templates 
-       SET is_deleted = false, deleted_at = NULL, deleted_by = NULL
-       WHERE id = $1`,
+       SET is_deleted = 0, deleted_at = NULL, deleted_by = NULL
+       WHERE id = ?`,
       [id]
     );
     
@@ -730,7 +730,7 @@ router.get('/deleted', auth, async (req, res) => {
     const result = await query(
       `SELECT id, name, description, category, template_data, is_public, created_by, created_at, updated_at, deleted_at
        FROM custom_templates 
-       WHERE is_deleted = true AND created_by = $1
+       WHERE is_deleted = 1 AND created_by = ?
        ORDER BY deleted_at DESC`,
       [req.user.id]
     );
@@ -740,6 +740,64 @@ router.get('/deleted', auth, async (req, res) => {
   } catch (error) {
     console.error('Error fetching deleted templates:', error);
     res.status(500).json({ error: 'Failed to fetch deleted templates' });
+  }
+});
+
+// PUT /api/templates/:id - Update a template
+router.put('/:id', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { title, description, questions, category, is_public } = req.body;
+    
+    // Check if template exists and belongs to user
+    const templateCheck = await query(
+      `SELECT id FROM custom_templates 
+       WHERE id = ? AND created_by = ? AND is_deleted = 0`,
+      [id, req.user.id]
+    );
+    
+    if (templateCheck.rows.length === 0) {
+      return res.status(404).json({ error: 'Template not found or access denied' });
+    }
+    
+    // Update template_data structure
+    const template_data = {
+      title: title,
+      description: description || '',
+      category: category || 'Custom',
+      questions: questions || []
+    };
+    
+    // Update the template
+    await query(
+      `UPDATE custom_templates 
+       SET name = ?, description = ?, category = ?, template_data = ?, is_public = ?, updated_at = datetime('now')
+       WHERE id = ?`,
+      [
+        title,
+        description || '',
+        category || 'Custom',
+        JSON.stringify(template_data),
+        is_public || false,
+        id
+      ]
+    );
+    
+    // Get the updated template
+    const updatedTemplate = await query(
+      'SELECT * FROM custom_templates WHERE id = ?',
+      [id]
+    );
+    
+    const transformedTemplate = transformTemplateForFrontend({ ...updatedTemplate.rows[0], type: 'custom' });
+    
+    res.json({
+      message: 'Template updated successfully',
+      template: transformedTemplate
+    });
+  } catch (error) {
+    console.error('Error updating template:', error);
+    res.status(500).json({ error: 'Failed to update template' });
   }
 });
 

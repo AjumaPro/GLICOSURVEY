@@ -13,7 +13,6 @@ import {
   Plus,
   Sparkles,
   Globe,
-  Edit,
   ChevronDown,
   ChevronRight,
   Shield
@@ -36,7 +35,6 @@ const Layout = () => {
       subItems: [
         { name: 'All Surveys', href: '/surveys', icon: FileText },
         { name: 'Published', href: '/surveys/published', icon: Globe },
-        { name: 'Drafts', href: '/surveys/drafts', icon: Edit },
       ]
     },
     { name: 'Templates', href: '/templates', icon: Sparkles },

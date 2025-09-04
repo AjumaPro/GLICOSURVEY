@@ -50,7 +50,7 @@ router.get('/users', auth, requireAdmin, async (req, res) => {
 
     // Get the authenticated user's role to determine visibility
     const adminResult = await query(
-      'SELECT role FROM users WHERE id = $1',
+      'SELECT role FROM users WHERE id = ?',
       [req.user.id]
     );
 
@@ -118,7 +118,7 @@ router.post('/users', auth, requireAdmin, async (req, res) => {
   try {
     // Check if the authenticated user is an admin or super admin
     const adminResult = await query(
-      'SELECT role FROM users WHERE id = $1',
+      'SELECT role FROM users WHERE id = ?',
       [req.user.id]
     );
 
@@ -148,7 +148,7 @@ router.post('/users', auth, requireAdmin, async (req, res) => {
     }
 
     const existingUser = await query(
-      'SELECT id FROM users WHERE email = $1',
+      'SELECT id FROM users WHERE email = ?',
       [email]
     );
 
@@ -160,20 +160,23 @@ router.post('/users', auth, requireAdmin, async (req, res) => {
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
     const result = await query(
-      `INSERT INTO users (email, password_hash, name, role, created_by)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, email, name, role, created_at`,
-      [email, passwordHash, name, role, req.user.id]
+      `INSERT INTO users (email, password_hash, full_name, role, created_by)
+       VALUES (?, ?, ?, ?, ?)`,
+      [email, passwordHash, full_name, role, req.user.id]
     );
 
-    const user = result.rows[0];
+    // Get the created user (SQLite3 doesn't support RETURNING)
+    const userResult = await query(
+      'SELECT id, email, full_name, role, created_at FROM users WHERE id = last_insert_rowid()'
+    );
+    const user = userResult.rows[0];
 
     res.status(201).json({
       message: 'User created successfully',
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        full_name: user.full_name,
         role: user.role,
         created_at: user.created_at
       }
@@ -192,7 +195,7 @@ router.put('/users/:id', auth, requireSuperAdmin, async (req, res) => {
     const { email, name, role, password } = req.body;
 
     const existingUser = await query(
-      'SELECT id, role FROM users WHERE id = $1',
+      'SELECT id, role FROM users WHERE id = ?',
       [id]
     );
 
@@ -214,7 +217,7 @@ router.put('/users/:id', auth, requireSuperAdmin, async (req, res) => {
 
     if (email) {
       const emailCheck = await query(
-        'SELECT id FROM users WHERE email = $1 AND id != $2',
+        'SELECT id FROM users WHERE email = ? AND id != ?',
         [email, id]
       );
 
@@ -225,31 +228,26 @@ router.put('/users/:id', auth, requireSuperAdmin, async (req, res) => {
 
     let updateFields = [];
     let params = [];
-    let paramCount = 0;
 
     if (email) {
-      paramCount++;
-      updateFields.push(`email = $${paramCount}`);
+      updateFields.push(`email = ?`);
       params.push(email);
     }
 
     if (name) {
-      paramCount++;
-      updateFields.push(`name = $${paramCount}`);
+      updateFields.push(`full_name = ?`);
       params.push(name);
     }
 
     if (role) {
-      paramCount++;
-      updateFields.push(`role = $${paramCount}`);
+      updateFields.push(`role = ?`);
       params.push(role);
     }
 
     if (password) {
-      paramCount++;
       const saltRounds = 10;
       const passwordHash = await bcrypt.hash(password, saltRounds);
-      updateFields.push(`password_hash = $${paramCount}`);
+      updateFields.push(`password_hash = ?`);
       params.push(passwordHash);
     }
 
@@ -257,24 +255,27 @@ router.put('/users/:id', auth, requireSuperAdmin, async (req, res) => {
       return res.status(400).json({ error: 'No fields to update' });
     }
 
-    updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
-    paramCount++;
+    updateFields.push(`updated_at = datetime('now')`);
     params.push(id);
 
-    const result = await query(
-      `UPDATE users SET ${updateFields.join(', ')} WHERE id = $${paramCount}
-       RETURNING id, email, name, role, created_at, updated_at`,
+    await query(
+      `UPDATE users SET ${updateFields.join(', ')} WHERE id = ?`,
       params
     );
 
-    const user = result.rows[0];
+    // Get the updated user (SQLite3 doesn't support RETURNING)
+    const userResult = await query(
+      'SELECT id, email, full_name, role, created_at, updated_at FROM users WHERE id = ?',
+      [id]
+    );
+    const user = userResult.rows[0];
 
     res.json({
       message: 'User updated successfully',
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        full_name: user.full_name,
         role: user.role,
         created_at: user.created_at,
         updated_at: user.updated_at
@@ -293,7 +294,7 @@ router.delete('/users/:id', auth, requireSuperAdmin, async (req, res) => {
     const { id } = req.params;
 
     const existingUser = await query(
-      'SELECT id, role FROM users WHERE id = $1',
+      'SELECT id, role FROM users WHERE id = ?',
       [id]
     );
 
@@ -309,7 +310,7 @@ router.delete('/users/:id', auth, requireSuperAdmin, async (req, res) => {
     // But we'll add a warning for deleting super admins
     const isDeletingSuperAdmin = existingUser.rows[0].role === 'super_admin';
 
-    await query('DELETE FROM users WHERE id = $1', [id]);
+    await query('DELETE FROM users WHERE id = ?', [id]);
 
     const message = isDeletingSuperAdmin 
       ? 'Super admin user deleted successfully' 
@@ -332,7 +333,7 @@ router.get('/users/:id/password', auth, requireSuperAdmin, async (req, res) => {
     const { id } = req.params;
 
     const userResult = await query(
-      'SELECT id, email, name, password_hash FROM users WHERE id = $1',
+      'SELECT id, email, full_name, password_hash FROM users WHERE id = ?',
       [id]
     );
 
@@ -351,7 +352,7 @@ router.get('/users/:id/password', auth, requireSuperAdmin, async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        full_name: user.full_name,
         password_hash: user.password_hash
       }
     });
@@ -373,7 +374,7 @@ router.post('/users/:id/reset-password', auth, requireSuperAdmin, async (req, re
     }
 
     const existingUser = await query(
-      'SELECT id, email, name FROM users WHERE id = $1',
+      'SELECT id, email, full_name FROM users WHERE id = ?',
       [id]
     );
 
@@ -389,7 +390,7 @@ router.post('/users/:id/reset-password', auth, requireSuperAdmin, async (req, re
     const passwordHash = await bcrypt.hash(new_password, saltRounds);
 
     await query(
-      'UPDATE users SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      'UPDATE users SET password_hash = ?, updated_at = datetime(\'now\') WHERE id = ?',
       [passwordHash, id]
     );
 
@@ -400,7 +401,7 @@ router.post('/users/:id/reset-password', auth, requireSuperAdmin, async (req, re
       user: {
         id: user.id,
         email: user.email,
-        name: user.name
+        full_name: user.full_name
       }
     });
 
@@ -421,7 +422,7 @@ router.post('/invite', auth, requireAdmin, async (req, res) => {
 
     // Check if the authenticated user is an admin or super admin
     const adminResult = await query(
-      'SELECT role FROM users WHERE id = $1',
+      'SELECT role FROM users WHERE id = ?',
       [req.user.id]
     );
 
@@ -447,7 +448,7 @@ router.post('/invite', auth, requireAdmin, async (req, res) => {
 
     // Check if user already exists
     const existingUser = await query(
-      'SELECT id FROM users WHERE email = $1',
+      'SELECT id FROM users WHERE email = ?',
       [email]
     );
 
@@ -461,14 +462,17 @@ router.post('/invite', auth, requireAdmin, async (req, res) => {
     const passwordHash = await bcrypt.hash(tempPassword, saltRounds);
 
     // Create the user
-    const result = await query(
-      `INSERT INTO users (email, password_hash, name, role, created_by)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, email, name, role, created_at`,
+    await query(
+      `INSERT INTO users (email, password_hash, full_name, role, created_by)
+       VALUES (?, ?, ?, ?, ?)`,
       [email, passwordHash, name, role, req.user.id]
     );
 
-    const user = result.rows[0];
+    // Get the created user (SQLite3 doesn't support RETURNING)
+    const userResult = await query(
+      'SELECT id, email, full_name, role, created_at FROM users WHERE id = last_insert_rowid()'
+    );
+    const user = userResult.rows[0];
 
     // TODO: Send invitation email with temporary password
     // For now, we'll return the temporary password in the response
@@ -479,7 +483,7 @@ router.post('/invite', auth, requireAdmin, async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
-        name: user.name,
+        full_name: user.full_name,
         role: user.role,
         created_at: user.created_at
       },
@@ -500,7 +504,7 @@ router.get('/stats', auth, requireAdmin, async (req, res) => {
   try {
     // Get the authenticated user's role to determine visibility
     const adminResult = await query(
-      'SELECT role FROM users WHERE id = $1',
+      'SELECT role FROM users WHERE id = ?',
       [req.user.id]
     );
 
@@ -519,9 +523,9 @@ router.get('/stats', auth, requireAdmin, async (req, res) => {
           COUNT(*) as total_users,
           COUNT(CASE WHEN role = 'admin' THEN 1 END) as admin_users,
           COUNT(CASE WHEN role = 'super_admin' THEN 1 END) as super_admin_users,
-          COUNT(CASE WHEN created_at >= CURRENT_DATE - INTERVAL '7 days' THEN 1 END) as new_users_7d
+          COUNT(CASE WHEN created_at >= datetime('now', '-7 days') THEN 1 END) as new_users_7d
         FROM users
-        WHERE (role != 'super_admin' OR created_by = $1)
+        WHERE (role != 'super_admin' OR created_by = ?)
       `;
       userStatsParams = [req.user.id];
     } else {
