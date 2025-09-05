@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import {
   Plus,
   FileText,
@@ -11,25 +10,20 @@ import {
   Eye,
   EyeOff,
   Download,
-  Share2,
   Calendar,
   Users,
   TrendingUp,
-  MoreHorizontal,
   Edit3,
   Share,
   Archive,
   RefreshCw,
-  Filter,
   Search,
-  Globe,
-  Edit
+  Globe
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 
 const Surveys = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);

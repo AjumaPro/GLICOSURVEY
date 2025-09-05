@@ -7,12 +7,9 @@ import {
   Globe,
   Lock,
   Copy,
-  Share,
   Eye,
   BarChart3,
   Edit,
-  Trash2,
-  CheckCircle,
   Clock,
   Users,
   FileText,
@@ -28,7 +25,6 @@ const PublishSurvey = () => {
   const [survey, setSurvey] = useState(null);
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [showQRCode, setShowQRCode] = useState(false);
 
   const fetchSurvey = React.useCallback(async () => {
@@ -96,9 +92,7 @@ const PublishSurvey = () => {
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(true);
       toast.success('Link copied to clipboard!');
-      setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       toast.error('Failed to copy link');
     }

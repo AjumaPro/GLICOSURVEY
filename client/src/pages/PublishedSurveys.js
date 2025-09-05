@@ -1,41 +1,30 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 import {
   Plus,
   FileText,
   BarChart3,
-  Settings,
-  Copy,
   Trash2,
   Eye,
   Download,
-  Share2,
   Calendar,
   Users,
   TrendingUp,
-  MoreHorizontal,
   Edit3,
   Share,
   Archive,
   RefreshCw,
-  Filter,
   Search,
   Globe,
   Link as LinkIcon,
   EyeOff,
-  Pause,
-  Play,
-  QrCode,
-  ExternalLink
+  QrCode
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import QRCodeShare from '../components/QRCodeShare';
 
 const PublishedSurveys = () => {
-  const { user } = useAuth();
-  const navigate = useNavigate();
   const [surveys, setSurveys] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -112,18 +101,6 @@ const PublishedSurveys = () => {
     }
   };
 
-  const handleCopy = async (id) => {
-    try {
-      const response = await axios.post(`/api/surveys/${id}/copy`);
-      toast.success('Survey copied successfully');
-      fetchPublishedSurveys();
-      // Navigate to the new survey builder
-      navigate(`/builder/${response.data.survey.id}`);
-    } catch (error) {
-      console.error('Error copying survey:', error);
-      toast.error('Failed to copy survey');
-    }
-  };
 
   const handleExport = async (id) => {
     try {
@@ -146,19 +123,6 @@ const PublishedSurveys = () => {
     }
   };
 
-  const handleShare = async (survey) => {
-    try {
-      const response = await axios.get(`/api/surveys/${survey.id}/share`);
-      setShareModal({
-        open: true,
-        survey: survey,
-        shareInfo: response.data
-      });
-    } catch (error) {
-      console.error('Error sharing survey:', error);
-      toast.error('Failed to share survey');
-    }
-  };
 
   const handleQRCode = async (survey) => {
     try {

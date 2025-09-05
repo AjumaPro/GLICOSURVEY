@@ -1,217 +1,94 @@
-# GLICO Survey System - In-House Deployment Checklist
+# 🚀 Deployment Checklist
 
 ## ✅ Pre-Deployment Checklist
 
-### Server Requirements
-- [ ] Server with IP `10.200.201.9` is available
-- [ ] Node.js 18+ installed on server
-- [ ] npm installed on server
-- [ ] Ports 3000 and 5000 are open in firewall
-- [ ] Server has internet access for initial setup
+### **Local Setup**
+- [ ] Git repository initialized
+- [ ] All changes committed
+- [ ] GitHub repository created
+- [ ] Code pushed to GitHub
 
-### Network Configuration
-- [ ] Server IP `10.200.201.9` is accessible from client machines
-- [ ] DNS resolution works (if using domain names)
-- [ ] Firewall allows HTTP traffic on ports 3000 and 5000
+### **Hosting Platform Setup**
+- [ ] Hosting account created (Heroku, Vercel, Railway, etc.)
+- [ ] New project created
+- [ ] GitHub repository connected
+- [ ] Initial deployment completed
 
-## 🚀 Deployment Steps
+### **Database Setup**
+- [ ] SQLite3 database will be created automatically
+- [ ] DATABASE_URL can be left empty for default database file
+- [ ] Database setup commands run:
+  - [ ] `npm run setup-db`
+  - [ ] `npm run migrate`
+  - [ ] `npm run create-admin`
+  - [ ] `npm run create-guest`
 
-### 1. Transfer Files to Server
+### **Environment Variables**
+- [ ] NODE_ENV=production
+- [ ] PORT=5000 (or platform default)
+- [ ] DATABASE_URL (configured)
+- [ ] JWT_SECRET (changed from default)
+- [ ] SESSION_SECRET (changed from default)
+- [ ] COOKIE_SECRET (changed from default)
+- [ ] FRONTEND_URL (updated with your domain)
+- [ ] LOG_LEVEL=info
+- [ ] RATE_LIMIT_WINDOW_MS=900000
+- [ ] RATE_LIMIT_MAX_REQUESTS=100
+- [ ] MAX_FILE_SIZE=10485760
+- [ ] UPLOAD_PATH=./uploads
+- [ ] SUPER_ADMIN_EMAIL=admin@glico.com
+- [ ] SUPER_ADMIN_PASSWORD (changed from default)
+- [ ] SUPER_ADMIN_NAME=Super Admin
+
+### **Verification**
+- [ ] Health check endpoint working: `/api/health`
+- [ ] Frontend loading correctly
+- [ ] Admin login working: admin@glico.com / admin123
+- [ ] Guest login working
+- [ ] Survey creation working
+- [ ] Survey responses working
+- [ ] Analytics dashboard working
+
+## 🚀 Quick Deploy Commands
+
 ```bash
-# Copy the entire project to the server
-scp -r /path/to/GLICOSURVEY-main user@10.200.201.9:/path/to/deployment/
-```
+# 1. Push to GitHub
+git add .
+git commit -m "Ready for deployment"
+git push origin main
 
-### 2. Install Dependencies
-```bash
-# On the server
-cd /path/to/GLICOSURVEY-main
-npm install
-cd client && npm install && cd ..
-```
+# 2. Deploy to your platform
+# (Platform-specific commands)
 
-### 3. Build Frontend
-```bash
-npm run build
-```
-
-### 4. Setup Database
-```bash
+# 3. Setup database
 npm run setup-db
-```
-
-### 5. Create Admin User
-```bash
+npm run migrate
 npm run create-admin
+npm run create-guest
 ```
 
-### 6. Start the Application
+## 🔧 Environment Variables Template
+
 ```bash
-# Option 1: Direct start
-./start-inhouse.sh
-
-# Option 2: Using npm script
-npm run start:inhouse
-
-# Option 3: Using PM2 (recommended for production)
-npm run pm2:start
+NODE_ENV=production
+PORT=5000
+DATABASE_URL=./glico_survey.db
+JWT_SECRET=your-secure-jwt-secret
+SESSION_SECRET=your-secure-session-secret
+COOKIE_SECRET=your-secure-cookie-secret
+FRONTEND_URL=https://your-app-domain.com
+LOG_LEVEL=info
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+MAX_FILE_SIZE=10485760
+UPLOAD_PATH=./uploads
+SUPER_ADMIN_EMAIL=admin@glico.com
+SUPER_ADMIN_PASSWORD=your-secure-password
+SUPER_ADMIN_NAME=Super Admin
 ```
 
-## 🔧 Configuration Files
+## 📞 Support Links
 
-### Environment Variables
-The following environment variables are configured:
-- `NODE_ENV=production`
-- `HOST=0.0.0.0` (binds to all interfaces)
-- `PORT=5000`
-- `FRONTEND_URL=http://10.200.201.9:3000`
-- `JWT_SECRET=glico-survey-super-secret-jwt-key-2024`
-
-### CORS Configuration
-- Frontend URL: `http://10.200.201.9:3000`
-- Backend API: `http://10.200.201.9:5000`
-
-## 🌐 Access Points
-
-### Production Access
-- **Main Application**: `http://10.200.201.9:5000`
-- **API Health Check**: `http://10.200.201.9:5000/api/health`
-
-### Development Access (if needed)
-- **Frontend**: `http://10.200.201.9:3000`
-- **Backend API**: `http://10.200.201.9:5000/api`
-
-## 🔑 Default Credentials
-
-### Super Admin
-- **Email**: `admin@glico.com`
-- **Password**: `admin123`
-
-## ✅ Post-Deployment Verification
-
-### 1. Health Check
-```bash
-curl http://10.200.201.9:5000/api/health
-```
-Expected response:
-```json
-{
-  "status": "OK",
-  "timestamp": "2024-01-01T00:00:00.000Z",
-  "version": "1.0.0",
-  "environment": "production"
-}
-```
-
-### 2. Frontend Access
-- [ ] Navigate to `http://10.200.201.9:5000`
-- [ ] Login page loads correctly
-- [ ] Can login with admin credentials
-- [ ] Dashboard loads correctly
-
-### 3. Survey Functionality
-- [ ] Can create new surveys
-- [ ] Can add questions of all types
-- [ ] Can publish surveys
-- [ ] Can access published surveys
-- [ ] Can submit survey responses
-
-### 4. API Endpoints
-- [ ] Authentication works
-- [ ] Survey CRUD operations work
-- [ ] Response submission works
-- [ ] Analytics data loads
-
-## 🔒 Security Checklist
-
-### Production Security
-- [ ] Change default admin password
-- [ ] Update JWT secret key
-- [ ] Configure firewall rules
-- [ ] Enable HTTPS (recommended)
-- [ ] Set up regular backups
-- [ ] Monitor access logs
-
-### Network Security
-- [ ] Restrict access to authorized IPs only
-- [ ] Use VPN for remote access
-- [ ] Implement rate limiting
-- [ ] Monitor for suspicious activity
-
-## 📊 Monitoring
-
-### Process Management
-```bash
-# Check if server is running
-ps aux | grep "node server/index.js"
-
-# Check PM2 status (if using PM2)
-pm2 status
-
-# View logs
-pm2 logs glico-survey-backend
-```
-
-### Database Backup
-```bash
-# Backup database
-cp glico_survey.db glico_survey_backup_$(date +%Y%m%d_%H%M%S).db
-```
-
-## 🛠️ Troubleshooting
-
-### Common Issues
-
-#### Port Already in Use
-```bash
-# Kill existing processes
-sudo lsof -ti:5000 | xargs kill -9
-sudo lsof -ti:3000 | xargs kill -9
-```
-
-#### Permission Issues
-```bash
-# Make scripts executable
-chmod +x *.sh
-```
-
-#### Database Issues
-```bash
-# Reset database
-rm glico_survey.db
-npm run setup-db
-npm run create-admin
-```
-
-#### CORS Issues
-- Verify `FRONTEND_URL` environment variable
-- Check CORS configuration in server
-- Ensure firewall allows cross-origin requests
-
-## 📞 Support
-
-### Logs Location
-- Server logs: Console output or PM2 logs
-- Database: `./glico_survey.db`
-- Uploads: `./server/uploads/`
-
-### Useful Commands
-```bash
-# Restart server
-npm run pm2:restart
-
-# View server status
-npm run pm2:status
-
-# Stop server
-npm run pm2:stop
-
-# Update application
-git pull && npm run build && npm run pm2:restart
-```
-
----
-
-**Deployment Status**: ✅ Ready for Production
-
-The GLICO Survey System is configured and ready for deployment on your in-house server at `10.200.201.9`.
+- **Platform Documentation**: Check your hosting platform's docs
+- **GitHub Repository**: Your project repository
+- **Application Health**: Check your deployed app's health endpoint 
