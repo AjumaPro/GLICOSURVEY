@@ -10,15 +10,8 @@ import {
   PieChart,
   Pie,
   Cell,
-  LineChart,
   Line,
-  AreaChart,
   Area,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
   ComposedChart
 } from 'recharts';
 import { 
@@ -29,7 +22,6 @@ import {
   Clock, 
   MapPin, 
   Smartphone,
-  Monitor,
   Globe,
   BarChart3,
   Calendar,
@@ -43,38 +35,54 @@ const AnalyticsDashboard = ({ analytics, surveyTitle = "Survey Analytics", surve
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const dashboardRef = useRef(null);
 
-  // Add fallback values to prevent crashes
+  // Helper function to sanitize numeric values
+  const sanitizeValue = (value) => {
+    if (value === null || value === undefined || isNaN(value) || value === Infinity || value === -Infinity) {
+      return 0;
+    }
+    return Number(value);
+  };
+
+  // Helper function to sanitize array data
+  const sanitizeArrayData = (array, numericKeys = ['count', 'responses', 'completion_rate', 'value', 'percent']) => {
+    if (!Array.isArray(array)) return [];
+    return array.map(item => {
+      const sanitized = { ...item };
+      numericKeys.forEach(key => {
+        if (sanitized[key] !== undefined) {
+          sanitized[key] = sanitizeValue(sanitized[key]);
+        }
+      });
+      return sanitized;
+    });
+  };
+
+  // Add fallback values to prevent crashes and sanitize all data
   const safeAnalytics = {
-    completion: { total_sessions: 0, completed_sessions: 0, completion_rate: 0, ...analytics?.completion },
-    questions: analytics?.questions || [],
-    hourlyDistribution: analytics?.hourlyDistribution || [],
-    deviceAnalytics: analytics?.deviceAnalytics || [],
-    browserAnalytics: analytics?.browserAnalytics || [],
-    questionCompletion: analytics?.questionCompletion || [],
-    locationAnalytics: analytics?.locationAnalytics || [],
-    responseTimeAnalysis: { 
-      avg_time_between_questions: 0, 
-      min_time_between_questions: 0, 
-      max_time_between_questions: 0, 
-      total_transitions: 0,
-      ...analytics?.responseTimeAnalysis 
+    completion: { 
+      total_sessions: sanitizeValue(analytics?.completion?.total_sessions) || 0, 
+      completed_sessions: sanitizeValue(analytics?.completion?.completed_sessions) || 0, 
+      completion_rate: sanitizeValue(analytics?.completion?.completion_rate) || 0
     },
-    weeklyPatterns: analytics?.weeklyPatterns || [],
-    questionDifficulty: analytics?.questionDifficulty || [],
-    engagementScore: { engagement_score: 0, ...analytics?.engagementScore }
+    questions: sanitizeArrayData(analytics?.questions || []),
+    hourlyDistribution: sanitizeArrayData(analytics?.hourlyDistribution || [], ['responses', 'count']),
+    deviceAnalytics: sanitizeArrayData(analytics?.deviceAnalytics || [], ['count', 'percent']),
+    browserAnalytics: sanitizeArrayData(analytics?.browserAnalytics || [], ['count']),
+    questionCompletion: sanitizeArrayData(analytics?.questionCompletion || [], ['completion_rate', 'count']),
+    locationAnalytics: sanitizeArrayData(analytics?.locationAnalytics || [], ['count']),
+    responseTimeAnalysis: { 
+      avg_time_between_questions: sanitizeValue(analytics?.responseTimeAnalysis?.avg_time_between_questions) || 0, 
+      min_time_between_questions: sanitizeValue(analytics?.responseTimeAnalysis?.min_time_between_questions) || 0, 
+      max_time_between_questions: sanitizeValue(analytics?.responseTimeAnalysis?.max_time_between_questions) || 0, 
+      total_transitions: sanitizeValue(analytics?.responseTimeAnalysis?.total_transitions) || 0
+    },
+    weeklyPatterns: sanitizeArrayData(analytics?.weeklyPatterns || [], ['responses', 'count']),
+    questionDifficulty: sanitizeArrayData(analytics?.questionDifficulty || [], ['count', 'difficulty']),
+    engagementScore: { 
+      engagement_score: sanitizeValue(analytics?.engagementScore?.engagement_score) || 0
+    }
   };
 
-  // Helper function to safely get max value from array
-  const getMaxValue = (array, key) => {
-    if (!array || array.length === 0) return 1;
-    return Math.max(...array.map(item => item[key] || 0), 1);
-  };
-
-  // Helper function to safely calculate percentage
-  const calculatePercentage = (value, total) => {
-    if (!total || total === 0) return 0;
-    return Math.min((value / total) * 100, 100);
-  };
 
   // Helper function to format time
   const formatTime = (seconds) => {
@@ -248,23 +256,29 @@ const AnalyticsDashboard = ({ analytics, surveyTitle = "Survey Analytics", surve
             <Smartphone className="w-6 h-6 text-blue-600" />
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={safeAnalytics.deviceAnalytics}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={80}
-                fill="#8884d8"
-                dataKey="count"
-              >
-                {safeAnalytics.deviceAnalytics.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-            </PieChart>
+            {safeAnalytics.deviceAnalytics.length > 0 ? (
+              <PieChart>
+                <Pie
+                  data={safeAnalytics.deviceAnalytics}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="count"
+                >
+                  {safeAnalytics.deviceAnalytics.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip content={<CustomTooltip />} />
+              </PieChart>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No device data available
+              </div>
+            )}
           </ResponsiveContainer>
         </div>
 
@@ -274,13 +288,19 @@ const AnalyticsDashboard = ({ analytics, surveyTitle = "Survey Analytics", surve
             <Globe className="w-6 h-6 text-green-600" />
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={safeAnalytics.browserAnalytics}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="browser" />
-              <YAxis />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} />
-            </BarChart>
+            {safeAnalytics.browserAnalytics.length > 0 ? (
+              <BarChart data={safeAnalytics.browserAnalytics}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="browser" />
+                <YAxis />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="count" fill="#10b981" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No browser data available
+              </div>
+            )}
           </ResponsiveContainer>
         </div>
       </div>
@@ -293,14 +313,20 @@ const AnalyticsDashboard = ({ analytics, surveyTitle = "Survey Analytics", surve
             <TrendingUp className="w-6 h-6 text-purple-600" />
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <ComposedChart data={safeAnalytics.hourlyDistribution}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="hour" />
-              <YAxis />
-              <Tooltip content={<CustomTooltip />} />
-              <Area type="monotone" dataKey="responses" fill="#3b82f6" fillOpacity={0.3} stroke="#3b82f6" />
-              <Line type="monotone" dataKey="responses" stroke="#ef4444" strokeWidth={2} />
-            </ComposedChart>
+            {safeAnalytics.hourlyDistribution.length > 0 ? (
+              <ComposedChart data={safeAnalytics.hourlyDistribution}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="hour" />
+                <YAxis />
+                <Tooltip content={<CustomTooltip />} />
+                <Area type="monotone" dataKey="responses" fill="#3b82f6" fillOpacity={0.3} stroke="#3b82f6" />
+                <Line type="monotone" dataKey="responses" stroke="#ef4444" strokeWidth={2} />
+              </ComposedChart>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No hourly data available
+              </div>
+            )}
           </ResponsiveContainer>
         </div>
 
@@ -310,13 +336,19 @@ const AnalyticsDashboard = ({ analytics, surveyTitle = "Survey Analytics", surve
             <Calendar className="w-6 h-6 text-orange-600" />
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={safeAnalytics.weeklyPatterns}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="day" />
-              <YAxis />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="responses" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-            </BarChart>
+            {safeAnalytics.weeklyPatterns.length > 0 ? (
+              <BarChart data={safeAnalytics.weeklyPatterns}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" />
+                <YAxis />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="responses" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No weekly data available
+              </div>
+            )}
           </ResponsiveContainer>
         </div>
       </div>
@@ -329,13 +361,19 @@ const AnalyticsDashboard = ({ analytics, surveyTitle = "Survey Analytics", surve
             <BarChart3 className="w-6 h-6 text-indigo-600" />
           </div>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={safeAnalytics.questionCompletion} layout="horizontal">
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis type="number" domain={[0, 100]} />
-              <YAxis dataKey="question" type="category" width={80} />
-              <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="completion_rate" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
-            </BarChart>
+            {safeAnalytics.questionCompletion.length > 0 ? (
+              <BarChart data={safeAnalytics.questionCompletion} layout="horizontal">
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis type="number" domain={[0, 100]} />
+                <YAxis dataKey="question" type="category" width={80} />
+                <Tooltip content={<CustomTooltip />} />
+                <Bar dataKey="completion_rate" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
+              </BarChart>
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-500">
+                No question completion data available
+              </div>
+            )}
           </ResponsiveContainer>
         </div>
 
@@ -345,23 +383,29 @@ const AnalyticsDashboard = ({ analytics, surveyTitle = "Survey Analytics", surve
             <MapPin className="w-6 h-6 text-red-600" />
           </div>
           <div className="space-y-4">
-            {safeAnalytics.locationAnalytics.slice(0, 5).map((location, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-semibold text-sm">{index + 1}</span>
+            {safeAnalytics.locationAnalytics.length > 0 ? (
+              safeAnalytics.locationAnalytics.slice(0, 5).map((location, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 font-semibold text-sm">{index + 1}</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">{location.country || 'Unknown'}</p>
+                      <p className="text-sm text-gray-500">{location.city || 'Unknown City'}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-gray-900">{location.country || 'Unknown'}</p>
-                    <p className="text-sm text-gray-500">{location.city || 'Unknown City'}</p>
+                  <div className="text-right">
+                    <p className="font-semibold text-gray-900">{location.count}</p>
+                    <p className="text-sm text-gray-500">responses</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-semibold text-gray-900">{location.count}</p>
-                  <p className="text-sm text-gray-500">responses</p>
-                </div>
+              ))
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                No location data available
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
@@ -395,13 +439,19 @@ const AnalyticsDashboard = ({ analytics, surveyTitle = "Survey Analytics", surve
       <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-100">
         <h3 className="text-xl font-semibold text-gray-900 mb-6">Question Difficulty Analysis</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={safeAnalytics.questionDifficulty}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="difficulty" />
-            <YAxis />
-            <Tooltip content={<CustomTooltip />} />
-            <Bar dataKey="count" fill="#06b6d4" radius={[4, 4, 0, 0]} />
-          </BarChart>
+          {safeAnalytics.questionDifficulty.length > 0 ? (
+            <BarChart data={safeAnalytics.questionDifficulty}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="difficulty" />
+              <YAxis />
+              <Tooltip content={<CustomTooltip />} />
+              <Bar dataKey="count" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          ) : (
+            <div className="flex items-center justify-center h-full text-gray-500">
+              No difficulty data available
+            </div>
+          )}
         </ResponsiveContainer>
       </div>
     </div>

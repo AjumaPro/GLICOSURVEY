@@ -15,7 +15,8 @@ import {
   Globe,
   ChevronDown,
   ChevronRight,
-  Shield
+  Shield,
+  Palette
 } from 'lucide-react';
 import GlicoLogo from './GlicoLogo';
 
@@ -38,6 +39,7 @@ const Layout = () => {
       ]
     },
     { name: 'Templates', href: '/templates', icon: Sparkles },
+    { name: 'Themes', href: '/themes', icon: Palette },
     { name: 'Survey Builder', href: '/builder', icon: Plus },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     ...(user?.role === 'admin' || user?.role === 'super_admin' ? [{ name: 'Admin', href: '/admin', icon: Shield }] : []),

@@ -801,4 +801,78 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
+// POST /api/templates/:id/publish - Publish a template
+router.post('/:id/publish', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Check if template exists and user has permission
+    const templateResult = await query(
+      `SELECT * FROM custom_templates WHERE id = $1 AND created_by = $2 AND is_deleted = 0`,
+      [id, req.user.id]
+    );
+    
+    if (templateResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Template not found or access denied' });
+    }
+    
+    const template = templateResult.rows[0];
+    
+    // Update template to be public
+    await query(
+      `UPDATE custom_templates SET is_public = 1, updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+      [id]
+    );
+    
+    res.json({ 
+      message: 'Template published successfully',
+      template: {
+        id: template.id,
+        name: template.name,
+        is_public: true
+      }
+    });
+  } catch (error) {
+    console.error('Error publishing template:', error);
+    res.status(500).json({ error: 'Failed to publish template' });
+  }
+});
+
+// POST /api/templates/:id/unpublish - Unpublish a template
+router.post('/:id/unpublish', auth, async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Check if template exists and user has permission
+    const templateResult = await query(
+      `SELECT * FROM custom_templates WHERE id = $1 AND created_by = $2 AND is_deleted = 0`,
+      [id, req.user.id]
+    );
+    
+    if (templateResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Template not found or access denied' });
+    }
+    
+    const template = templateResult.rows[0];
+    
+    // Update template to be private
+    await query(
+      `UPDATE custom_templates SET is_public = 0, updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+      [id]
+    );
+    
+    res.json({ 
+      message: 'Template unpublished successfully',
+      template: {
+        id: template.id,
+        name: template.name,
+        is_public: false
+      }
+    });
+  } catch (error) {
+    console.error('Error unpublishing template:', error);
+    res.status(500).json({ error: 'Failed to unpublish template' });
+  }
+});
+
 module.exports = router;

@@ -165,6 +165,41 @@ const setupDatabase = async () => {
       )
     `);
 
+    // Create themes table
+    await query(`
+      CREATE TABLE IF NOT EXISTS themes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT,
+        category TEXT NOT NULL,
+        colors TEXT NOT NULL,
+        typography TEXT NOT NULL,
+        layout TEXT NOT NULL,
+        components TEXT NOT NULL,
+        is_default INTEGER DEFAULT 0,
+        is_premium INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+
+    // Create theme ratings table
+    await query(`
+      CREATE TABLE IF NOT EXISTS theme_ratings (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        theme_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now')),
+        FOREIGN KEY (theme_id) REFERENCES themes(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE(theme_id, user_id)
+      )
+    `);
+
     // Create indexes for better performance
     await query(`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)`);
@@ -175,6 +210,10 @@ const setupDatabase = async () => {
     await query(`CREATE INDEX IF NOT EXISTS idx_analytics_event_type ON analytics(event_type)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id)`);
     await query(`CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_themes_user_id ON themes(user_id)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_themes_category ON themes(category)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_theme_ratings_theme_id ON theme_ratings(theme_id)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_theme_ratings_user_id ON theme_ratings(user_id)`);
 
     console.log('✅ Database setup completed successfully');
 

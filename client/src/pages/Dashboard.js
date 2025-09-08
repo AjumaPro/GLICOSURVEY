@@ -64,10 +64,10 @@ const Dashboard = () => {
     }
   ];
 
-  // Calculate additional metrics
+  // Calculate additional metrics with safe division
   const totalQuestions = dashboardData?.top_surveys?.reduce((sum, survey) => sum + (survey.question_count || 0), 0) || 0;
-  const avgResponsesPerSurvey = dashboardData?.summary?.total_respondents > 0 && dashboardData?.summary?.published_surveys > 0 
-    ? Math.round(dashboardData.summary.total_respondents / dashboardData.summary.published_surveys)
+  const avgResponsesPerSurvey = dashboardData?.summary?.published_surveys > 0 
+    ? Math.round((dashboardData.summary.total_respondents || 0) / dashboardData.summary.published_surveys)
     : 0;
 
   return (
@@ -152,7 +152,7 @@ const Dashboard = () => {
               <p className="text-sm font-medium text-gray-600">Response Rate</p>
               <p className="text-2xl font-bold text-amber-600">
                 {dashboardData?.summary?.published_surveys > 0 
-                  ? Math.round((dashboardData.summary.total_respondents / dashboardData.summary.published_surveys) * 10)
+                  ? Math.round(((dashboardData.summary.total_respondents || 0) / dashboardData.summary.published_surveys) * 10)
                   : 0}%
               </p>
             </div>

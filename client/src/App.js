@@ -19,6 +19,8 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 import AdminDashboard from './pages/AdminDashboard';
 import EmojiTest from './pages/EmojiTest';
+import Themes from './pages/Themes';
+import ThemeEditor from './pages/ThemeEditor';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -111,6 +113,10 @@ function AppRoutes() {
         <Route path="editor/:id" element={<SurveyEditor />} />
         <Route path="publish/:id" element={<PublishSurvey />} />
         <Route path="analytics/:id" element={<SurveyAnalytics />} />
+        <Route path="themes" element={<Themes />} />
+        <Route path="themes/create" element={<ThemeEditor />} />
+        <Route path="themes/:id/edit" element={<ThemeEditor />} />
+        <Route path="themes/:id/preview" element={<ThemeEditor />} />
         <Route path="admin" element={
           <AdminRoute>
             <AdminDashboard />

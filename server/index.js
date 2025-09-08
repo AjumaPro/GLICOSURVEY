@@ -63,6 +63,8 @@ app.use('/api/questions', require('./routes/questions'));
 app.use('/api/responses', require('./routes/responses'));
 app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/templates', require('./routes/templates'));
+app.use('/api/themes', require('./routes/themes'));
+app.use('/api/wordpress', require('./routes/wordpress-sync'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/upload', require('./routes/upload'));
 

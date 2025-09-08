@@ -1,0 +1,772 @@
+/* Glico Survey Frontend Styles */
+
+/* CSS Variables for consistent theming */
+:root {
+    --glico-primary: #3b82f6;
+    --glico-primary-dark: #2563eb;
+    --glico-secondary: #64748b;
+    --glico-success: #10b981;
+    --glico-warning: #f59e0b;
+    --glico-error: #ef4444;
+    --glico-background: #f8fafc;
+    --glico-surface: #ffffff;
+    --glico-border: #e2e8f0;
+    --glico-text: #1e293b;
+    --glico-text-light: #64748b;
+    --glico-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --glico-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    --glico-radius: 0.5rem;
+    --glico-radius-lg: 0.75rem;
+    --glico-transition: all 0.2s ease-in-out;
+}
+
+/* Reset and base styles */
+.glico-survey-container {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--glico-text);
+    background: var(--glico-background);
+    min-height: 100vh;
+    padding: 2rem 1rem;
+}
+
+.glico-survey-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    background: var(--glico-surface);
+    border-radius: var(--glico-radius-lg);
+    box-shadow: var(--glico-shadow-lg);
+    overflow: hidden;
+}
+
+/* Header styles */
+.glico-survey-header {
+    background: linear-gradient(135deg, var(--glico-primary) 0%, var(--glico-primary-dark) 100%);
+    color: white;
+    padding: 2rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.glico-survey-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+    opacity: 0.3;
+}
+
+.glico-survey-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    position: relative;
+    z-index: 1;
+}
+
+.glico-survey-description {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+}
+
+/* Progress bar */
+.glico-survey-progress {
+    background: rgba(255, 255, 255, 0.2);
+    height: 4px;
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 1.5rem 0 0 0;
+    position: relative;
+    z-index: 1;
+}
+
+.glico-survey-progress-bar {
+    background: white;
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+/* Form styles */
+.glico-survey-form {
+    padding: 2rem;
+}
+
+.glico-question {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--glico-surface);
+    border: 1px solid var(--glico-border);
+    border-radius: var(--glico-radius);
+    transition: var(--glico-transition);
+}
+
+.glico-question:hover {
+    border-color: var(--glico-primary);
+    box-shadow: var(--glico-shadow);
+}
+
+.glico-question-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin: 0 0 1rem 0;
+    color: var(--glico-text);
+}
+
+.glico-question-title.required::after {
+    content: ' *';
+    color: var(--glico-error);
+}
+
+.glico-question-description {
+    font-size: 0.9rem;
+    color: var(--glico-text-light);
+    margin: 0 0 1rem 0;
+}
+
+/* Input styles */
+.glico-input,
+.glico-textarea,
+.glico-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid var(--glico-border);
+    border-radius: var(--glico-radius);
+    font-size: 1rem;
+    transition: var(--glico-transition);
+    background: var(--glico-surface);
+}
+
+.glico-input:focus,
+.glico-textarea:focus,
+.glico-select:focus {
+    outline: none;
+    border-color: var(--glico-primary);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.glico-textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Radio and checkbox styles */
+.glico-radio-group,
+.glico-checkbox-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.glico-radio-item,
+.glico-checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem;
+    border: 2px solid var(--glico-border);
+    border-radius: var(--glico-radius);
+    cursor: pointer;
+    transition: var(--glico-transition);
+    background: var(--glico-surface);
+}
+
+.glico-radio-item:hover,
+.glico-checkbox-item:hover {
+    border-color: var(--glico-primary);
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.glico-radio-item input[type="radio"],
+.glico-checkbox-item input[type="checkbox"] {
+    margin-right: 0.75rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    accent-color: var(--glico-primary);
+}
+
+.glico-radio-item.selected,
+.glico-checkbox-item.selected {
+    border-color: var(--glico-primary);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+/* Rating scale styles */
+.glico-rating-scale {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.glico-rating-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 1rem;
+    border-radius: var(--glico-radius);
+    transition: var(--glico-transition);
+    min-width: 80px;
+}
+
+.glico-rating-item:hover {
+    background: rgba(59, 130, 246, 0.1);
+    transform: translateY(-2px);
+}
+
+.glico-rating-item.selected {
+    background: var(--glico-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--glico-shadow-lg);
+}
+
+.glico-rating-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+}
+
+.glico-rating-label {
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+/* Emoji scale styles */
+.glico-emoji-scale {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+}
+
+.glico-emoji-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 1rem;
+    border-radius: var(--glico-radius);
+    transition: var(--glico-transition);
+    min-width: 100px;
+    position: relative;
+}
+
+.glico-emoji-item:hover {
+    background: rgba(59, 130, 246, 0.1);
+    transform: scale(1.05);
+}
+
+.glico-emoji-item.selected {
+    background: var(--glico-primary);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: var(--glico-shadow-lg);
+}
+
+.glico-emoji-item.selected::after {
+    content: '✓';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--glico-success);
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.glico-emoji {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    filter: grayscale(0.3);
+    transition: var(--glico-transition);
+}
+
+.glico-emoji-item:hover .glico-emoji {
+    filter: grayscale(0);
+    transform: scale(1.1);
+}
+
+.glico-emoji-item.selected .glico-emoji {
+    filter: grayscale(0);
+    transform: scale(1.2);
+}
+
+.glico-emoji-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Custom emoji scale */
+.glico-custom-emoji-scale {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.glico-custom-emoji-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 1.5rem 1rem;
+    border: 2px solid var(--glico-border);
+    border-radius: var(--glico-radius);
+    transition: var(--glico-transition);
+    background: var(--glico-surface);
+}
+
+.glico-custom-emoji-item:hover {
+    border-color: var(--glico-primary);
+    background: rgba(59, 130, 246, 0.05);
+    transform: translateY(-2px);
+}
+
+.glico-custom-emoji-item.selected {
+    border-color: var(--glico-primary);
+    background: rgba(59, 130, 246, 0.1);
+    transform: translateY(-2px);
+    box-shadow: var(--glico-shadow);
+}
+
+.glico-custom-emoji {
+    width: 60px;
+    height: 60px;
+    margin-bottom: 0.75rem;
+    transition: var(--glico-transition);
+}
+
+.glico-custom-emoji-item:hover .glico-custom-emoji {
+    transform: scale(1.1);
+}
+
+.glico-custom-emoji-item.selected .glico-custom-emoji {
+    transform: scale(1.15);
+}
+
+/* Button styles */
+.glico-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: var(--glico-radius);
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: var(--glico-transition);
+    min-height: 44px;
+}
+
+.glico-button-primary {
+    background: var(--glico-primary);
+    color: white;
+}
+
+.glico-button-primary:hover {
+    background: var(--glico-primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--glico-shadow-lg);
+}
+
+.glico-button-secondary {
+    background: var(--glico-surface);
+    color: var(--glico-text);
+    border: 2px solid var(--glico-border);
+}
+
+.glico-button-secondary:hover {
+    border-color: var(--glico-primary);
+    color: var(--glico-primary);
+}
+
+.glico-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* Navigation buttons */
+.glico-survey-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    background: var(--glico-background);
+    border-top: 1px solid var(--glico-border);
+}
+
+.glico-survey-navigation .glico-button {
+    min-width: 120px;
+}
+
+/* Loading states */
+.glico-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.glico-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+    border-radius: 50%;
+    animation: glico-spin 1s linear infinite;
+}
+
+@keyframes glico-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Success message */
+.glico-success-message {
+    background: var(--glico-success);
+    color: white;
+    padding: 1.5rem;
+    border-radius: var(--glico-radius);
+    text-align: center;
+    margin: 2rem 0;
+}
+
+.glico-success-message h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+}
+
+.glico-success-message p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+/* Error states */
+.glico-error {
+    color: var(--glico-error);
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+
+.glico-question.error {
+    border-color: var(--glico-error);
+    background: rgba(239, 68, 68, 0.05);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .glico-survey-container {
+        padding: 1rem 0.5rem;
+    }
+    
+    .glico-survey-header {
+        padding: 1.5rem 1rem;
+    }
+    
+    .glico-survey-title {
+        font-size: 1.5rem;
+    }
+    
+    .glico-survey-form {
+        padding: 1rem;
+    }
+    
+    .glico-question {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .glico-emoji-scale {
+        gap: 1rem;
+    }
+    
+    .glico-emoji-item {
+        min-width: 80px;
+        padding: 0.75rem;
+    }
+    
+    .glico-emoji {
+        font-size: 2.5rem;
+    }
+    
+    .glico-custom-emoji-scale {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 0.75rem;
+    }
+    
+    .glico-survey-navigation {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .glico-survey-navigation .glico-button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .glico-emoji-scale {
+        gap: 0.5rem;
+    }
+    
+    .glico-emoji-item {
+        min-width: 70px;
+        padding: 0.5rem;
+    }
+    
+    .glico-emoji {
+        font-size: 2rem;
+    }
+    
+    .glico-custom-emoji-scale {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Print styles */
+@media print {
+    .glico-survey-container {
+        background: white;
+        padding: 0;
+    }
+    
+    .glico-survey-wrapper {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+    
+    .glico-survey-navigation {
+        display: none;
+    }
+    
+    .glico-button {
+        display: none;
+    }
+}
+
+/* Accessibility improvements */
+.glico-radio-item:focus-within,
+.glico-checkbox-item:focus-within,
+.glico-rating-item:focus-within,
+.glico-emoji-item:focus-within,
+.glico-custom-emoji-item:focus-within {
+    outline: 2px solid var(--glico-primary);
+    outline-offset: 2px;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    :root {
+        --glico-border: #000000;
+        --glico-text: #000000;
+        --glico-text-light: #333333;
+    }
+}
+
+/* SVG Emoji Scale Styles */
+.glico-svg-emoji-scale {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+}
+
+.glico-svg-emoji-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 1rem;
+    border-radius: var(--glico-radius);
+    transition: var(--glico-transition);
+    min-width: 100px;
+    position: relative;
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid transparent;
+}
+
+.glico-svg-emoji-item:hover {
+    background: rgba(59, 130, 246, 0.1);
+    transform: scale(1.05);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.glico-svg-emoji-item.selected {
+    background: var(--glico-primary);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: var(--glico-shadow-lg);
+    border-color: var(--glico-primary);
+}
+
+.glico-svg-emoji-item.selected::after {
+    content: '✓';
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: var(--glico-success);
+    color: white;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.glico-svg-emoji {
+    margin-bottom: 0.5rem;
+    transition: var(--glico-transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.glico-svg-emoji-item:hover .glico-svg-emoji {
+    transform: scale(1.1);
+}
+
+.glico-svg-emoji-item.selected .glico-svg-emoji {
+    transform: scale(1.1);
+}
+
+.glico-svg-emoji-label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.2;
+    color: var(--glico-text);
+}
+
+.glico-svg-emoji-item.selected .glico-svg-emoji-label {
+    color: white;
+}
+
+/* Likert Scale Styles */
+.glico-likert-scale {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+}
+
+.glico-likert-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    padding: 1rem 0.5rem;
+    border-radius: var(--glico-radius);
+    transition: var(--glico-transition);
+    min-width: 60px;
+    flex: 1;
+    background: rgba(255, 255, 255, 0.8);
+    border: 2px solid transparent;
+}
+
+.glico-likert-item:hover {
+    background: rgba(59, 130, 246, 0.1);
+    transform: translateY(-2px);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.glico-likert-item.selected {
+    background: var(--glico-primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: var(--glico-shadow-lg);
+    border-color: var(--glico-primary);
+}
+
+.glico-likert-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: var(--glico-primary);
+    transition: var(--glico-transition);
+}
+
+.glico-likert-item:hover .glico-likert-number {
+    transform: scale(1.1);
+}
+
+.glico-likert-item.selected .glico-likert-number {
+    color: white;
+}
+
+.glico-likert-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-align: center;
+    line-height: 1.2;
+    color: var(--glico-text);
+}
+
+.glico-likert-item.selected .glico-likert-label {
+    color: white;
+}
+
+/* Thumbs Rating Styles */
+.glico-svg-emoji-scale.thumbs {
+    gap: 2rem;
+}
+
+.glico-svg-emoji-scale.thumbs .glico-svg-emoji-item {
+    min-width: 120px;
+    padding: 1.5rem;
+}
+
+/* Star Rating Styles */
+.glico-svg-emoji-scale.stars {
+    gap: 0.5rem;
+}
+
+.glico-svg-emoji-scale.stars .glico-svg-emoji-item {
+    min-width: 60px;
+    padding: 0.5rem;
+}
+
+/* Yes/No Rating Styles */
+.glico-svg-emoji-scale.yes-no {
+    gap: 2rem;
+}
+
+.glico-svg-emoji-scale.yes-no .glico-svg-emoji-item {
+    min-width: 120px;
+    padding: 1.5rem;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    * {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+}

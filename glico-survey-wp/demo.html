@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glico Survey - Frontend Demo</title>
+    <link rel="stylesheet" href="assets/css/frontend.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .demo-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .demo-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .demo-header h1 {
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        .demo-header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+        .demo-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .demo-section h2 {
+            color: #1e293b;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .demo-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        .demo-card h3 {
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+        .demo-card p {
+            color: #64748b;
+            margin-bottom: 15px;
+        }
+        .demo-button {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .demo-button:hover {
+            background: #2563eb;
+        }
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        .feature-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .feature-list li:before {
+            content: "✓";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        <div class="demo-header">
+            <h1>🎯 Glico Survey WordPress Plugin</h1>
+            <p>Complete survey management system with modern UI and emoji-based rating scales</p>
+        </div>
+        
+        <div class="demo-section">
+            <h2>🚀 Features</h2>
+            <div class="demo-grid">
+                <div class="demo-card">
+                    <h3>📝 Question Types</h3>
+                    <ul class="feature-list">
+                        <li>Text Input</li>
+                        <li>Textarea</li>
+                        <li>Radio Buttons</li>
+                        <li>Checkboxes</li>
+                        <li>Dropdown Select</li>
+                        <li>Rating Scale (1-10)</li>
+                        <li>Emoji Scale</li>
+                        <li>Custom Emoji Scale</li>
+                    </ul>
+                </div>
+                <div class="demo-card">
+                    <h3>🎨 Modern UI</h3>
+                    <ul class="feature-list">
+                        <li>Responsive Design</li>
+                        <li>Beautiful Animations</li>
+                        <li>Progress Tracking</li>
+                        <li>Interactive Elements</li>
+                        <li>Accessibility Support</li>
+                        <li>Mobile Optimized</li>
+                    </ul>
+            </div>
+                <div class="demo-card">
+                    <h3>📊 Analytics</h3>
+                    <ul class="feature-list">
+                        <li>Response Tracking</li>
+                        <li>Real-time Statistics</li>
+                        <li>Export Capabilities</li>
+                        <li>Session Management</li>
+                        <li>Rate Limiting</li>
+                        <li>IP Tracking</li>
+                    </ul>
+            </div>
+            </div>
+            </div>
+            
+        <div class="demo-section">
+            <h2>🔧 Installation</h2>
+            <p>To install the Glico Survey WordPress plugin:</p>
+            <div class="code-block">
+# 1. Upload the plugin folder to your WordPress plugins directory
+wp-content/plugins/glico-survey-wp/
+
+# 2. Activate the plugin in WordPress admin
+# 3. The plugin will automatically create database tables
+# 4. Start creating surveys using the admin interface
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>📋 Usage</h2>
+            <div class="demo-grid">
+                <div class="demo-card">
+                    <h3>Shortcodes</h3>
+                    <p>Display surveys anywhere on your site using shortcodes:</p>
+                    <div class="code-block">
+[glico_survey id="1"]
+[glico_survey_list limit="5"]
+                    </div>
+                </div>
+                <div class="demo-card">
+                    <h3>REST API</h3>
+                    <p>Access surveys via REST API endpoints:</p>
+                    <div class="code-block">
+GET /wp-json/glico-survey/v1/surveys
+GET /wp-json/glico-survey/v1/surveys/1
+POST /wp-json/glico-survey/v1/surveys/1/submit
+                            </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+        <div class="demo-section">
+            <h2>🎯 Demo Survey</h2>
+            <p>Here's a sample survey showing the frontend capabilities:</p>
+            
+            <!-- Sample Survey HTML -->
+            <div class="glico-survey-container" data-survey-id="demo">
+                <div class="glico-survey-wrapper">
+                    <!-- Survey Header -->
+                    <div class="glico-survey-header">
+                        <h1 class="glico-survey-title">Customer Satisfaction Survey</h1>
+                        <p class="glico-survey-description">Help us improve our services by sharing your feedback</p>
+                        
+                        <!-- Progress Bar -->
+                        <div class="glico-survey-progress">
+                            <div class="glico-survey-progress-bar" style="width: 33%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Survey Form -->
+                    <form class="glico-survey-form" method="post">
+                        <!-- Question 1: Text Input -->
+                        <div class="glico-question" data-question-id="1" data-required="true">
+                            <h3 class="glico-question-title required">What is your name?</h3>
+                            <div class="glico-question-content">
+                                <input type="text" class="glico-input" name="question_1" data-question-id="1" placeholder="Enter your name" required>
+                            </div>
+                        </div>
+
+                        <!-- Question 2: Radio Buttons -->
+                        <div class="glico-question" data-question-id="2" data-required="true" style="display: none;">
+                            <h3 class="glico-question-title required">How satisfied are you with our service?</h3>
+                            <div class="glico-question-content">
+                                <div class="glico-radio-group">
+                                    <label class="glico-radio-item" data-question-id="2">
+                                        <input type="radio" name="question_2" value="Very Satisfied" required>
+                                        <span>Very Satisfied</span>
+                            </label>
+                                    <label class="glico-radio-item" data-question-id="2">
+                                        <input type="radio" name="question_2" value="Satisfied" required>
+                                        <span>Satisfied</span>
+                            </label>
+                                    <label class="glico-radio-item" data-question-id="2">
+                                        <input type="radio" name="question_2" value="Neutral" required>
+                                        <span>Neutral</span>
+                            </label>
+                                    <label class="glico-radio-item" data-question-id="2">
+                                        <input type="radio" name="question_2" value="Dissatisfied" required>
+                                        <span>Dissatisfied</span>
+                            </label>
+                                </div>
+                        </div>
+                    </div>
+                    
+                        <!-- Question 3: SVG Emoji Scale -->
+                        <div class="glico-question" data-question-id="3" data-required="true" style="display: none;">
+                            <h3 class="glico-question-title required">How do you feel about our product?</h3>
+                            <div class="glico-question-content">
+                                <div class="glico-svg-emoji-scale">
+                                    <div class="glico-svg-emoji-item" data-question-id="3" data-value="1">
+                                        <div class="glico-svg-emoji">
+                                            <svg viewBox="0 0 24 24" width="40" height="40" fill="#ef4444">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                                <path d="M8.5 8.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm7 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/>
+                                                <path d="M12 17.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="glico-svg-emoji-label">Very Sad</div>
+                                    </div>
+                                    <div class="glico-svg-emoji-item" data-question-id="3" data-value="2">
+                                        <div class="glico-svg-emoji">
+                                            <svg viewBox="0 0 24 24" width="40" height="40" fill="#f97316">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                                <path d="M8.5 8.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm7 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/>
+                                                <path d="M12 17.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="glico-svg-emoji-label">Sad</div>
+                                    </div>
+                                    <div class="glico-svg-emoji-item" data-question-id="3" data-value="3">
+                                        <div class="glico-svg-emoji">
+                                            <svg viewBox="0 0 24 24" width="40" height="40" fill="#6b7280">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                                <path d="M8.5 8.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm7 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/>
+                                                <path d="M12 17.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="glico-svg-emoji-label">Neutral</div>
+                                    </div>
+                                    <div class="glico-svg-emoji-item" data-question-id="3" data-value="4">
+                                        <div class="glico-svg-emoji">
+                                            <svg viewBox="0 0 24 24" width="40" height="40" fill="#22c55e">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                                <path d="M8.5 8.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm7 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/>
+                                                <path d="M12 17.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="glico-svg-emoji-label">Happy</div>
+                                    </div>
+                                    <div class="glico-svg-emoji-item" data-question-id="3" data-value="5">
+                                        <div class="glico-svg-emoji">
+                                            <svg viewBox="0 0 24 24" width="40" height="40" fill="#16a34a">
+                                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                                <path d="M8.5 8.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm7 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5z"/>
+                                                <path d="M12 17.5c2.33 0 4.31-1.46 5.11-3.5H6.89c.8 2.04 2.78 3.5 5.11 3.5z"/>
+                                            </svg>
+                                        </div>
+                                        <div class="glico-svg-emoji-label">Very Happy</div>
+                                    </div>
+                                </div>
+                    </div>
+                </div>
+                
+                        <!-- Navigation -->
+                        <div class="glico-survey-navigation">
+                            <button type="button" class="glico-button glico-button-secondary glico-btn-prev" style="display: none;">
+                                Previous
+                            </button>
+                            
+                            <div class="glico-survey-progress-text">
+                                <span class="glico-current-question">1</span> / <span class="glico-total-questions">3</span>
+                            </div>
+                            
+                            <button type="button" class="glico-button glico-button-primary glico-btn-next">
+                                Next
+                            </button>
+                            
+                            <button type="submit" class="glico-button glico-button-primary glico-btn-submit" style="display: none;">
+                                Submit Survey
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="demo-section">
+            <h2>📁 File Structure</h2>
+            <div class="code-block">
+glico-survey-wp/
+├── glico-survey.php          # Main plugin file
+├── assets/
+│   ├── css/
+│   │   ├── frontend.css      # Frontend styles
+│   │   └── admin.css         # Admin styles
+│   └── js/
+│       ├── frontend.js       # Frontend JavaScript
+│       └── admin.js          # Admin JavaScript
+├── includes/
+│   ├── Core/
+│   │   ├── Database.php      # Database operations
+│   │   ├── Security.php      # Security functions
+│   │   ├── Analytics.php     # Analytics handling
+│   │   └── SurveyHandler.php # Survey processing
+│   ├── Frontend/
+│   │   ├── SurveyRenderer.php # Survey rendering
+│   │   └── SurveyHandler.php  # Frontend handling
+│   └── Admin/
+│       ├── AdminMenu.php     # Admin menu
+│       ├── SurveyManager.php # Survey management
+│       └── AnalyticsDashboard.php # Analytics
+└── templates/
+    ├── frontend/
+    │   └── survey.php        # Survey template
+    └── admin/
+        ├── dashboard.php     # Admin dashboard
+        ├── surveys-list.php  # Surveys list
+        └── survey-edit.php   # Survey editor
+                </div>
+            </div>
+            
+        <div class="demo-section">
+            <h2>🔗 Integration</h2>
+            <p>The plugin integrates seamlessly with WordPress and provides multiple ways to display surveys:</p>
+            <div class="demo-grid">
+                <div class="demo-card">
+                    <h3>WordPress Integration</h3>
+                    <ul class="feature-list">
+                        <li>WordPress Admin Interface</li>
+                        <li>Custom Post Types</li>
+                        <li>User Management</li>
+                        <li>Plugin Hooks & Filters</li>
+                        <li>WordPress REST API</li>
+                        <li>WordPress Security</li>
+                    </ul>
+                </div>
+                <div class="demo-card">
+                    <h3>Third-party Integration</h3>
+                    <ul class="feature-list">
+                        <li>Elementor Widgets</li>
+                        <li>Gutenberg Blocks</li>
+                        <li>Shortcode Support</li>
+                        <li>REST API Endpoints</li>
+                        <li>AJAX Handlers</li>
+                        <li>Webhook Support</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="assets/js/frontend.js"></script>
+    <script>
+        // Demo functionality
+        $(document).ready(function() {
+            // Simulate survey navigation
+            let currentQuestion = 0;
+            const totalQuestions = 3;
+            
+            $('.glico-btn-next').click(function() {
+                if (currentQuestion < totalQuestions - 1) {
+                    $('.glico-question').eq(currentQuestion).hide();
+                    currentQuestion++;
+                    $('.glico-question').eq(currentQuestion).show();
+                    updateProgress();
+                    updateNavigation();
+                }
+            });
+            
+            $('.glico-btn-prev').click(function() {
+                if (currentQuestion > 0) {
+                    $('.glico-question').eq(currentQuestion).hide();
+                    currentQuestion--;
+                    $('.glico-question').eq(currentQuestion).show();
+                    updateProgress();
+                    updateNavigation();
+                }
+            });
+            
+            function updateProgress() {
+                const progress = ((currentQuestion + 1) / totalQuestions) * 100;
+                $('.glico-survey-progress-bar').css('width', progress + '%');
+                $('.glico-current-question').text(currentQuestion + 1);
+            }
+            
+            function updateNavigation() {
+                $('.glico-btn-prev').toggle(currentQuestion > 0);
+                $('.glico-btn-next').toggle(currentQuestion < totalQuestions - 1);
+                $('.glico-btn-submit').toggle(currentQuestion === totalQuestions - 1);
+            }
+            
+            // Handle SVG emoji interactions
+            $('.glico-svg-emoji-item').click(function() {
+                const questionId = $(this).data('question-id');
+                const value = $(this).data('value');
+                
+                // Remove selected class from all items in this question
+                $(`.glico-svg-emoji-item[data-question-id="${questionId}"]`).removeClass('selected');
+                
+                // Add selected class to clicked item
+                $(this).addClass('selected');
+                
+                // Store the value (you can use this for form submission)
+                $(`input[name="question_${questionId}"]`).remove();
+                $(this).closest('.glico-question').append(`<input type="hidden" name="question_${questionId}" value="${value}">`);
+            });
+            
+            // Initialize
+            updateProgress();
+            updateNavigation();
+        });
+    </script>
+</body>
+</html>

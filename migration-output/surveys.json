@@ -1,0 +1,442 @@
+[
+  {
+    "id": 69,
+    "title": "Customer Satisfaction Survey - Adabraka Branch",
+    "description": "",
+    "status": "published",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-04 11:48:21",
+    "updated_at": "2025-09-04 11:48:28"
+  },
+  {
+    "id": 59,
+    "title": "Share Feedback ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:24:44",
+    "updated_at": "2025-09-03 12:24:44"
+  },
+  {
+    "id": 55,
+    "title": "Share Feedback ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:24:43",
+    "updated_at": "2025-09-03 12:24:43"
+  },
+  {
+    "id": 56,
+    "title": "Share Feedback ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:24:43",
+    "updated_at": "2025-09-03 12:24:43"
+  },
+  {
+    "id": 57,
+    "title": "Share Feedback ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:24:43",
+    "updated_at": "2025-09-03 12:24:43"
+  },
+  {
+    "id": 54,
+    "title": "Share Feedback ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:24:40",
+    "updated_at": "2025-09-03 12:24:40"
+  },
+  {
+    "id": 53,
+    "title": "Share Feedback ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:24:38",
+    "updated_at": "2025-09-03 12:24:38"
+  },
+  {
+    "id": 52,
+    "title": "Share Feedback ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:24:35",
+    "updated_at": "2025-09-03 12:24:35"
+  },
+  {
+    "id": 51,
+    "title": "Untitled Survey",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:23:47",
+    "updated_at": "2025-09-03 12:23:47"
+  },
+  {
+    "id": 48,
+    "title": "Untitled Survey",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:10:22",
+    "updated_at": "2025-09-03 12:10:22"
+  },
+  {
+    "id": 49,
+    "title": "Untitled Survey",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:10:22",
+    "updated_at": "2025-09-03 12:10:22"
+  },
+  {
+    "id": 50,
+    "title": "Untitled Survey",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:10:22",
+    "updated_at": "2025-09-03 12:10:22"
+  },
+  {
+    "id": 46,
+    "title": "Untitled Survey",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:10:21",
+    "updated_at": "2025-09-03 12:10:21"
+  },
+  {
+    "id": 47,
+    "title": "Untitled Survey",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:10:21",
+    "updated_at": "2025-09-03 12:10:21"
+  },
+  {
+    "id": 44,
+    "title": "Untitled Survey",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:10:20",
+    "updated_at": "2025-09-03 12:10:20"
+  },
+  {
+    "id": 45,
+    "title": "Untitled Survey",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:10:20",
+    "updated_at": "2025-09-03 12:10:20"
+  },
+  {
+    "id": 43,
+    "title": "Untitled Survey",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:10:18",
+    "updated_at": "2025-09-03 12:10:18"
+  },
+  {
+    "id": 42,
+    "title": "Untitled Survey",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:10:17",
+    "updated_at": "2025-09-03 12:10:17"
+  },
+  {
+    "id": 41,
+    "title": "Feedback ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 12:10:11",
+    "updated_at": "2025-09-03 12:10:11"
+  },
+  {
+    "id": 39,
+    "title": "Feedback ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 11:55:21",
+    "updated_at": "2025-09-03 11:55:21"
+  },
+  {
+    "id": 40,
+    "title": "Feedback ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 11:55:21",
+    "updated_at": "2025-09-03 11:55:21"
+  },
+  {
+    "id": 38,
+    "title": "Feedback ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 11:55:19",
+    "updated_at": "2025-09-03 11:55:19"
+  },
+  {
+    "id": 37,
+    "title": "Feedback ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 11:48:11",
+    "updated_at": "2025-09-03 11:48:11"
+  },
+  {
+    "id": 34,
+    "title": "Feedback",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 11:36:46",
+    "updated_at": "2025-09-03 11:36:46"
+  },
+  {
+    "id": 35,
+    "title": "Feedback",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 11:36:46",
+    "updated_at": "2025-09-03 11:36:46"
+  },
+  {
+    "id": 36,
+    "title": "Feedback",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 11:36:46",
+    "updated_at": "2025-09-03 11:36:46"
+  },
+  {
+    "id": 31,
+    "title": "Feedback",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 11:36:45",
+    "updated_at": "2025-09-03 11:36:45"
+  },
+  {
+    "id": 32,
+    "title": "Feedback",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 11:36:45",
+    "updated_at": "2025-09-03 11:36:45"
+  },
+  {
+    "id": 33,
+    "title": "Feedback",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 11:36:45",
+    "updated_at": "2025-09-03 11:36:45"
+  },
+  {
+    "id": 30,
+    "title": "Feedback",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 11:36:43",
+    "updated_at": "2025-09-03 11:36:43"
+  },
+  {
+    "id": 28,
+    "title": "Feedback",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 11:36:42",
+    "updated_at": "2025-09-03 11:36:42"
+  },
+  {
+    "id": 29,
+    "title": "Feedback",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 11:36:42",
+    "updated_at": "2025-09-03 11:36:42"
+  },
+  {
+    "id": 27,
+    "title": "Feedback",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-03 11:36:41",
+    "updated_at": "2025-09-03 11:36:41"
+  },
+  {
+    "id": 26,
+    "title": "Customer Survey ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-02 11:56:08",
+    "updated_at": "2025-09-02 11:56:08"
+  },
+  {
+    "id": 25,
+    "title": "Customer Feedback ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-02 11:05:38",
+    "updated_at": "2025-09-02 11:05:38"
+  },
+  {
+    "id": 24,
+    "title": "Customer Feedback ",
+    "description": "",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-09-02 11:05:36",
+    "updated_at": "2025-09-02 11:05:36"
+  },
+  {
+    "id": 22,
+    "title": "GLICO Banking Services Survey",
+    "description": "Help us improve our banking services by providing your feedback",
+    "status": "draft",
+    "settings": "\"\\\"\\\\\\\"\\\\\\\\\\\\\\\"{}\\\\\\\\\\\\\\\"\\\\\\\"\\\"\"",
+    "questions": [],
+    "created_at": "2025-08-27 12:09:04",
+    "updated_at": "2025-09-04 10:56:39"
+  },
+  {
+    "id": 23,
+    "title": "GLICO Insurance Feedback",
+    "description": "Share your experience with our insurance services",
+    "status": "draft",
+    "settings": "\"\\\"{}\\\"\"",
+    "questions": [],
+    "created_at": "2025-08-27 12:09:04",
+    "updated_at": "2025-09-04 11:27:53"
+  },
+  {
+    "id": 13,
+    "title": "Customer Satisfaction Survey  - AIRPORT BRANCH",
+    "description": "Help us improve our services by providing your feedback",
+    "status": "published",
+    "settings": "{}",
+    "questions": [],
+    "created_at": "2025-08-27 11:32:15",
+    "updated_at": "2025-09-04 11:37:29"
+  },
+  {
+    "id": 14,
+    "title": "Employee Feedback Form",
+    "description": "Share your thoughts about the workplace environment",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-08-27 11:32:15",
+    "updated_at": "2025-08-27 11:32:15"
+  },
+  {
+    "id": 15,
+    "title": "Product Feedback Survey",
+    "description": "Tell us about your experience with our products",
+    "status": "published",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-08-27 11:32:15",
+    "updated_at": "2025-08-27 11:32:15"
+  },
+  {
+    "id": 16,
+    "title": "Event Feedback Survey",
+    "description": "Share your experience from our recent event",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-08-27 11:32:15",
+    "updated_at": "2025-08-27 11:32:15"
+  },
+  {
+    "id": 17,
+    "title": "Website Usability Survey",
+    "description": "Help us improve our website by sharing your experience",
+    "status": "published",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-08-27 11:32:15",
+    "updated_at": "2025-08-27 11:32:15"
+  },
+  {
+    "id": 1,
+    "title": "Sample Survey",
+    "description": "This is a test survey",
+    "status": "draft",
+    "settings": {},
+    "questions": [],
+    "created_at": "2025-08-27 10:56:47",
+    "updated_at": "2025-08-27 10:56:47"
+  }
+]

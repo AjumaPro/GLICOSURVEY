@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { motion } from 'framer-motion';
 import { 
   Plus, 
@@ -17,6 +16,7 @@ import {
   Settings
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { templateService } from '../services/templateService';
 
 const SurveyTemplates = () => {
   const [templates, setTemplates] = useState([]);
@@ -33,11 +33,11 @@ const SurveyTemplates = () => {
 
   const fetchTemplates = async () => {
     try {
-      const response = await axios.get('/api/templates');
-      console.log('Templates fetched:', response.data);
-      console.log('First template questions:', response.data[0]?.questions);
-      console.log('Number of templates:', response.data.length);
-      setTemplates(response.data);
+      const templates = await templateService.getAllTemplates();
+      console.log('Templates fetched:', templates);
+      console.log('First template questions:', templates[0]?.questions);
+      console.log('Number of templates:', templates.length);
+      setTemplates(templates);
     } catch (error) {
       console.error('Error fetching templates:', error);
       toast.error('Failed to load templates');
@@ -51,13 +51,13 @@ const SurveyTemplates = () => {
     try {
       // Use databaseId for API calls, fallback to id if databaseId doesn't exist
       const apiId = template.databaseId || template.id;
-      const response = await axios.post(`/api/templates/${apiId}/create`, {
+      const response = await templateService.createSurveyFromTemplate(apiId, {
         title: template.title,
         description: template.description
       });
       
       toast.success('Survey created successfully!');
-      navigate(`/builder/${response.data.surveyId}`);
+      navigate(`/builder/${response.surveyId}`);
     } catch (error) {
       console.error('Error creating survey from template:', error);
       toast.error('Failed to create survey from template');
@@ -70,7 +70,7 @@ const SurveyTemplates = () => {
     try {
       // Use databaseId for API calls, fallback to id if databaseId doesn't exist
       const apiId = template.databaseId || template.id;
-      await axios.post(`/api/templates/${apiId}/duplicate`, {
+      await templateService.duplicateTemplate(apiId, {
         title: `${template.title} (Copy)`,
         description: template.description
       });
@@ -91,7 +91,7 @@ const SurveyTemplates = () => {
     try {
       // Use databaseId for API calls, fallback to id if databaseId doesn't exist
       const apiId = template.databaseId || template.id;
-      await axios.delete(`/api/templates/${apiId}`);
+      await templateService.deleteTemplate(apiId);
       toast.success('Template deleted successfully!');
       fetchTemplates(); // Refresh the list
     } catch (error) {
@@ -115,13 +115,13 @@ const SurveyTemplates = () => {
     try {
       // Use databaseId for API calls, fallback to id if databaseId doesn't exist
       const apiId = selectedTemplate.databaseId || selectedTemplate.id;
-      const response = await axios.post(`/api/templates/${apiId}/customize`, customizedTemplate);
+      const response = await templateService.customizeTemplate(apiId, customizedTemplate);
       toast.success('Customized template saved successfully!');
       setShowCustomizeModal(false);
       setSelectedTemplate(null);
       setCustomizedTemplate(null);
       // Navigate to the survey builder with the new survey
-      navigate(`/builder/${response.data.surveyId}`);
+      navigate(`/builder/${response.surveyId}`);
     } catch (error) {
       console.error('Error saving customized template:', error);
       toast.error('Failed to save customized template');
@@ -130,10 +130,11 @@ const SurveyTemplates = () => {
 
   const handleSaveAsNewTemplate = async () => {
     try {
-      const response = await axios.post('/api/templates', {
+      await templateService.createTemplate({
         title: `${customizedTemplate.title} (Customized)`,
         description: customizedTemplate.description,
-        questions: customizedTemplate.questions
+        questions: customizedTemplate.questions,
+        category: customizedTemplate.category || 'Custom'
       });
       toast.success('Customized template saved as new template!');
       setShowCustomizeModal(false);
@@ -143,6 +144,29 @@ const SurveyTemplates = () => {
     } catch (error) {
       console.error('Error saving as new template:', error);
       toast.error('Failed to save as new template');
+    }
+  };
+
+
+  const handlePublishTemplate = async (template) => {
+    try {
+      await templateService.publishTemplate(template.databaseId || template.id);
+      toast.success('Template published successfully!');
+      fetchTemplates(); // Refresh the list
+    } catch (error) {
+      console.error('Error publishing template:', error);
+      toast.error('Failed to publish template');
+    }
+  };
+
+  const handleUnpublishTemplate = async (template) => {
+    try {
+      await templateService.unpublishTemplate(template.databaseId || template.id);
+      toast.success('Template unpublished successfully!');
+      fetchTemplates(); // Refresh the list
+    } catch (error) {
+      console.error('Error unpublishing template:', error);
+      toast.error('Failed to unpublish template');
     }
   };
 
@@ -482,6 +506,21 @@ const SurveyTemplates = () => {
                       Delete
                     </button>
                   </div>
+                  
+                  {/* Publish/Unpublish Button */}
+                  {template.type === 'custom' && (
+                    <button
+                      onClick={() => template.is_public ? handleUnpublishTemplate(template) : handlePublishTemplate(template)}
+                      className={`w-full text-sm py-2 rounded-lg transition-colors duration-200 flex items-center justify-center ${
+                        template.is_public 
+                          ? 'bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-300' 
+                          : 'bg-green-100 hover:bg-green-200 text-green-700 border border-green-300'
+                      }`}
+                    >
+                      <Globe className="h-4 w-4 mr-1" />
+                      {template.is_public ? 'Unpublish' : 'Publish'}
+                    </button>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -562,6 +601,25 @@ const SurveyTemplates = () => {
                       rows={3}
                       placeholder="Enter template description"
                     />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Category
+                    </label>
+                    <select
+                      value={customizedTemplate.category || 'Custom'}
+                      onChange={(e) => setCustomizedTemplate(prev => ({ ...prev, category: e.target.value }))}
+                      className="input w-full"
+                    >
+                      <option value="Business">Business</option>
+                      <option value="HR">HR</option>
+                      <option value="Events">Events</option>
+                      <option value="Technology">Technology</option>
+                      <option value="Education">Education</option>
+                      <option value="Healthcare">Healthcare</option>
+                      <option value="Custom">Custom</option>
+                    </select>
                   </div>
                 </div>
               </div>

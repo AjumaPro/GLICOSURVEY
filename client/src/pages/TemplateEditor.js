@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import {
   Save,
   ArrowLeft,
@@ -8,8 +7,7 @@ import {
   Trash2,
   GripVertical,
   FileText,
-  BarChart3,
-  Settings
+  Globe
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
@@ -17,7 +15,6 @@ import toast from 'react-hot-toast';
 const TemplateEditor = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [template, setTemplate] = useState({
     title: '',
     description: '',
@@ -25,12 +22,6 @@ const TemplateEditor = () => {
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    if (id) {
-      fetchTemplate();
-    }
-  }, [id]);
 
   const fetchTemplate = async () => {
     try {
@@ -43,6 +34,12 @@ const TemplateEditor = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (id) {
+      fetchTemplate();
+    }
+  }, [id, fetchTemplate]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -58,6 +55,25 @@ const TemplateEditor = () => {
     } catch (error) {
       console.error('Error saving template:', error);
       toast.error('Failed to save template');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!id) {
+      toast.error('Please save the template first before publishing');
+      return;
+    }
+    
+    setSaving(true);
+    try {
+      await axios.post(`/api/templates/${id}/publish`);
+      toast.success('Template published successfully');
+      navigate('/templates');
+    } catch (error) {
+      console.error('Error publishing template:', error);
+      toast.error('Failed to publish template');
     } finally {
       setSaving(false);
     }
@@ -157,18 +173,31 @@ const TemplateEditor = () => {
             <p className="text-gray-600">Design your survey template</p>
           </div>
         </div>
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="btn-primary"
-        >
-          {saving ? (
-            <div className="spinner w-4 h-4 mr-2"></div>
-          ) : (
-            <Save className="h-4 w-4 mr-2" />
+        <div className="flex space-x-3">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="btn-primary"
+          >
+            {saving ? (
+              <div className="spinner w-4 h-4 mr-2"></div>
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            {saving ? 'Saving...' : 'Save Template'}
+          </button>
+          
+          {id && (
+            <button
+              onClick={handlePublish}
+              disabled={saving}
+              className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors duration-200 flex items-center"
+            >
+              <Globe className="h-4 w-4 mr-2" />
+              Publish Template
+            </button>
           )}
-          {saving ? 'Saving...' : 'Save Template'}
-        </button>
+        </div>
       </div>
 
       {/* Template Details */}

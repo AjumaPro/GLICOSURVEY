@@ -4,7 +4,6 @@ import {
   Plus,
   FileText,
   BarChart3,
-  Settings,
   Copy,
   Trash2,
   Eye,
@@ -14,7 +13,6 @@ import {
   Users,
   TrendingUp,
   Edit3,
-  Share,
   Archive,
   RefreshCw,
   Search,
@@ -22,6 +20,8 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { surveyService } from '../services/surveyService';
+import { ShareButton } from '../components/sharing';
 
 const Surveys = () => {
   const navigate = useNavigate();
@@ -51,8 +51,8 @@ const Surveys = () => {
 
   const fetchSurveys = async () => {
     try {
-      const response = await axios.get('/api/surveys');
-      setSurveys(response.data);
+      const surveys = await surveyService.getSurveys();
+      setSurveys(surveys);
     } catch (error) {
       console.error('Error fetching surveys:', error);
       toast.error('Failed to load surveys');
@@ -64,7 +64,7 @@ const Surveys = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this survey? This action cannot be undone.')) {
       try {
-        await axios.delete(`/api/surveys/${id}`);
+        await surveyService.deleteSurvey(id);
         toast.success('Survey deleted successfully');
         fetchSurveys();
       } catch (error) {
@@ -76,11 +76,11 @@ const Surveys = () => {
 
   const handleCopy = async (id) => {
     try {
-      const response = await axios.post(`/api/surveys/${id}/copy`);
+      const response = await surveyService.duplicateSurvey(id);
       toast.success('Survey copied successfully');
       fetchSurveys();
       // Navigate to the new survey builder
-      navigate(`/builder/${response.data.survey.id}`);
+      navigate(`/builder/${response.survey.id}`);
     } catch (error) {
       console.error('Error copying survey:', error);
       toast.error('Failed to copy survey');
@@ -108,26 +108,6 @@ const Surveys = () => {
     }
   };
 
-  const handleShare = async (id) => {
-    try {
-      const response = await axios.get(`/api/surveys/${id}/share`);
-      const shareUrl = `${window.location.origin}/survey/${response.data.shareId}`;
-      
-      if (navigator.share) {
-        await navigator.share({
-          title: 'Take my survey',
-          text: 'Please take a moment to complete this survey',
-          url: shareUrl
-        });
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        toast.success('Survey link copied to clipboard!');
-      }
-    } catch (error) {
-      console.error('Error sharing survey:', error);
-      toast.error('Failed to share survey');
-    }
-  };
 
   const handleArchive = async (id) => {
     try {
@@ -142,7 +122,7 @@ const Surveys = () => {
 
   const handlePublish = async (id) => {
     try {
-      await axios.post(`/api/surveys/${id}/publish`);
+      await surveyService.publishSurvey(id);
       toast.success('Survey published successfully');
       fetchSurveys();
     } catch (error) {
@@ -154,7 +134,7 @@ const Surveys = () => {
   const handleUnpublish = async (id) => {
     if (window.confirm('Are you sure you want to unpublish this survey? It will no longer be accessible to respondents.')) {
       try {
-        await axios.post(`/api/surveys/${id}/unpublish`);
+        await surveyService.unpublishSurvey(id);
         toast.success('Survey unpublished successfully');
         fetchSurveys();
       } catch (error) {
@@ -237,6 +217,13 @@ const Surveys = () => {
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </button>
+          <Link
+            to="/templates"
+            className="btn-secondary"
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Templates
+          </Link>
           <Link
             to="/builder"
             className="btn-primary"
@@ -392,12 +379,23 @@ const Surveys = () => {
                 {/* Primary Actions */}
                 <div className="flex space-x-2 mb-3">
                   <Link
+                    to={`/builder/${survey.id}`}
+                    className="flex-1 btn-primary text-center"
+                  >
+                    <Edit3 className="h-4 w-4 mr-2" />
+                    Edit
+                  </Link>
+                  <Link
                     to={`/preview/${survey.id}`}
                     className="flex-1 btn-secondary text-center"
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     Preview
                   </Link>
+                </div>
+                
+                {/* Secondary Actions */}
+                <div className="flex space-x-2 mb-3">
                   <Link
                     to={`/analytics/${survey.id}`}
                     className="flex-1 btn-secondary text-center"
@@ -405,25 +403,33 @@ const Surveys = () => {
                     <BarChart3 className="h-4 w-4 mr-2" />
                     Analytics
                   </Link>
+                  {survey.status === 'draft' ? (
+                    <button
+                      onClick={() => handlePublish(survey.id)}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-3 rounded-lg transition-colors duration-200 flex items-center justify-center"
+                    >
+                      <Globe className="h-4 w-4 mr-2" />
+                      Publish
+                    </button>
+                  ) : survey.status === 'published' ? (
+                    <button
+                      onClick={() => handleUnpublish(survey.id)}
+                      className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 px-3 rounded-lg transition-colors duration-200 flex items-center justify-center"
+                    >
+                      <EyeOff className="h-4 w-4 mr-2" />
+                      Unpublish
+                    </button>
+                  ) : null}
                 </div>
 
-                {/* Secondary Actions */}
-                <div className="flex items-center justify-between">
+                {/* Additional Actions */}
+                <div className="flex items-center justify-between pt-2 border-t border-gray-100">
                   <div className="flex space-x-1">
-                    <Link
-                      to={`/builder/${survey.id}`}
-                      className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-md hover:bg-gray-100"
-                      title="Edit Survey"
-                    >
-                      <Settings className="h-4 w-4" />
-                    </Link>
-                    <button
-                      onClick={() => handleShare(survey.id)}
-                      className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-md hover:bg-gray-100"
-                      title="Share Survey"
-                    >
-                      <Share className="h-4 w-4" />
-                    </button>
+                    <ShareButton 
+                      survey={survey} 
+                      variant="ghost" 
+                      size="sm"
+                    />
                     <button
                       onClick={() => handleCopy(survey.id)}
                       className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-md hover:bg-gray-100"
@@ -431,27 +437,6 @@ const Surveys = () => {
                     >
                       <Copy className="h-4 w-4" />
                     </button>
-                  </div>
-                  
-                  <div className="flex space-x-1">
-                    {survey.status === 'draft' && (
-                      <button
-                        onClick={() => handlePublish(survey.id)}
-                        className="p-2 text-green-400 hover:text-green-600 transition-colors rounded-md hover:bg-green-50"
-                        title="Publish Survey"
-                      >
-                        <Globe className="h-4 w-4" />
-                      </button>
-                    )}
-                    {survey.status === 'published' && (
-                      <button
-                        onClick={() => handleUnpublish(survey.id)}
-                        className="p-2 text-yellow-400 hover:text-yellow-600 transition-colors rounded-md hover:bg-yellow-50"
-                        title="Unpublish Survey"
-                      >
-                        <EyeOff className="h-4 w-4" />
-                      </button>
-                    )}
                     <button
                       onClick={() => handleExport(survey.id)}
                       className="p-2 text-gray-400 hover:text-gray-600 transition-colors rounded-md hover:bg-gray-100"
@@ -459,6 +444,9 @@ const Surveys = () => {
                     >
                       <Download className="h-4 w-4" />
                     </button>
+                  </div>
+                  
+                  <div className="flex space-x-1">
                     {survey.status !== 'archived' && (
                       <button
                         onClick={() => handleArchive(survey.id)}

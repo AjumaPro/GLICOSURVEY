@@ -31,10 +31,18 @@ import {
   Sliders,
   X,
   Globe,
-  Lock
+  Lock,
+  Share2,
+  Settings
 } from 'lucide-react';
 import QuestionUpload from '../components/QuestionUpload';
 import EmojiScale, { emojiScaleTemplates } from '../components/EmojiScale';
+import { SurveyBuilderProvider } from '../contexts/SurveyBuilderContext';
+import { surveyService } from '../services/surveyService';
+import { questionTypesService } from '../services/questionTypesService';
+import { ShareButton } from '../components/sharing';
+import { SurveyBuilder as SurveyBuilderComponent } from '../components/survey-builder';
+import { PublishSettings } from '../components/sharing';
 
 const SurveyBuilder = () => {
   const { id } = useParams();
@@ -49,6 +57,8 @@ const SurveyBuilder = () => {
   const [previewMode, setPreviewMode] = useState(false);
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showPublishSettings, setShowPublishSettings] = useState(false);
+  const [availableQuestionTypes, setAvailableQuestionTypes] = useState([]);
 
   const fetchSurvey = React.useCallback(async () => {
     try {
@@ -66,10 +76,20 @@ const SurveyBuilder = () => {
     }
   }, [id]);
 
+  const loadQuestionTypes = async () => {
+    try {
+      const types = await questionTypesService.getQuestionTypes();
+      setAvailableQuestionTypes(types);
+    } catch (error) {
+      console.error('Error loading question types:', error);
+    }
+  };
+
   useEffect(() => {
     if (id) {
       fetchSurvey();
     }
+    loadQuestionTypes();
   }, [id, fetchSurvey]);
 
   const saveSurvey = async () => {
@@ -87,12 +107,12 @@ const SurveyBuilder = () => {
       };
 
       if (id) {
-        await axios.put(`/api/surveys/${id}`, surveyData);
+        await surveyService.updateSurvey(id, surveyData);
         toast.success('Survey updated successfully');
       } else {
-        const response = await axios.post('/api/surveys', surveyData);
+        const response = await surveyService.createSurvey(surveyData);
         toast.success('Survey created successfully');
-        navigate(`/builder/${response.data.id}`);
+        navigate(`/builder/${response.id}`);
       }
     } catch (error) {
       console.error('Error saving survey:', error);
@@ -115,7 +135,7 @@ const SurveyBuilder = () => {
   const publishSurvey = async () => {
     try {
       setLoading(true);
-      await axios.post(`/api/surveys/${id}/publish`);
+      await surveyService.publishSurvey(id);
       toast.success('Survey published successfully!');
       fetchSurvey(); // Refresh survey data
     } catch (error) {
@@ -129,7 +149,7 @@ const SurveyBuilder = () => {
   const unpublishSurvey = async () => {
     try {
       setLoading(true);
-      await axios.post(`/api/surveys/${id}/unpublish`);
+      await surveyService.unpublishSurvey(id);
       toast.success('Survey unpublished successfully!');
       fetchSurvey(); // Refresh survey data
     } catch (error) {
@@ -143,10 +163,10 @@ const SurveyBuilder = () => {
   const duplicateSurvey = async () => {
     try {
       setLoading(true);
-      const response = await axios.post(`/api/surveys/${id}/copy`);
+      const response = await surveyService.duplicateSurvey(id);
       toast.success('Survey duplicated successfully!');
       // Navigate to the new survey builder
-      navigate(`/builder/${response.data.survey.id}`);
+      navigate(`/builder/${response.survey.id}`);
     } catch (error) {
       console.error('Error duplicating survey:', error);
       toast.error('Failed to duplicate survey');
@@ -475,6 +495,18 @@ const SurveyBuilder = () => {
           {id && survey && (
             <>
               <button
+                onClick={() => setShowPublishSettings(true)}
+                className="btn-secondary"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Publish Settings
+              </button>
+              <ShareButton 
+                survey={survey} 
+                variant="default" 
+                size="md"
+              />
+              <button
                 onClick={duplicateSurvey}
                 disabled={loading}
                 className="btn-secondary"
@@ -709,6 +741,36 @@ const SurveyBuilder = () => {
           onQuestionsUploaded={handleQuestionsUploaded}
           onClose={() => setShowUploadModal(false)}
         />
+      )}
+
+      {/* Publish Settings Modal */}
+      {showPublishSettings && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">Publish Settings</h2>
+                <button
+                  onClick={() => setShowPublishSettings(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(90vh-200px)]">
+              <PublishSettings
+                survey={survey}
+                onSave={(result) => {
+                  setShowPublishSettings(false);
+                  fetchSurvey(); // Refresh survey data
+                  toast.success('Publish settings updated successfully');
+                }}
+                onCancel={() => setShowPublishSettings(false)}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
